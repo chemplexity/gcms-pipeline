@@ -37,6 +37,5 @@ create table samples
     time_units      TEXT    not null,
     intensity_units TEXT,
     channel_units   TEXT,
-    baseline        REAL    not null,
-    peaks           REAL
+    baseline        REAL    not null
 );
