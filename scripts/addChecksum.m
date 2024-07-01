@@ -6,6 +6,8 @@ function data = addChecksum(data)
 
 % data(i).checksum = ....
 
-return data
 
+for i=1: size(data, 1)
+    data(i).checksum = GetFileChecksum(data(i).file_path, 'hash', 'MD5');
+end
 end
