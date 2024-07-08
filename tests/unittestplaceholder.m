@@ -72,8 +72,8 @@ expEndTime = 0.110383333333333;
 actStartTime = croppedData.start_time;
 actEndTime = croppedData.end_time;
 
-assert(abs(expStartTime - actStartTime) < 0.000000000000001);
-assert(abs(expEndTime - actEndTime) < 0.000000000000001);
+assert(abs(expStartTime - actStartTime) < 1E-15);
+assert(abs(expEndTime - actEndTime) < 1E-15);
 
 % Test case 2
 croppedData = cropDataByTimeRange(data(1), 0.1210, 0.1310);
@@ -83,8 +83,8 @@ expEndTime = 0.130733333333333;
 actStartTime = croppedData.start_time;
 actEndTime = croppedData.end_time;
 
-assert(abs(expStartTime - actStartTime) < 0.000000000000001);
-assert(abs(expEndTime - actEndTime) < 0.000000000000001);
+assert(abs(expStartTime - actStartTime) < 1E-15);
+assert(abs(expEndTime - actEndTime) < 1E-15);
 
 % Test case 3
 croppedData = cropDataByTimeRange(data(1), 0.107466666666667, 0.107466666666667);
@@ -94,8 +94,8 @@ expEndTime = 0.107466666666667;
 actStartTime = croppedData(1).start_time;
 actEndTime = croppedData(1).end_time;
 
-assert(abs(expStartTime - actStartTime) < 0.000000000000001);
-assert(abs(expEndTime - actEndTime) < 0.000000000000001);
+assert(abs(expStartTime - actStartTime) < 1E-15);
+assert(abs(expEndTime - actEndTime) < 1E-15);
 
 
 %% preprocessData (1 tests)
@@ -121,7 +121,7 @@ actEndTime = processedData(1).end_time;
 
 assert(numChanCol > newNumChanCol);
 assert(numIntCol > newNumIntCol);
-assert(abs(startTime - actStartTime) < 0.000000000000001);
-assert(abs(endTime - actEndTime) < 0.000000000000001);
+assert(abs(startTime - actStartTime) < 1E-15);
+assert(abs(endTime - actEndTime) < 1E-15);
 assert(isfield(processedData, 'baseline'));
 

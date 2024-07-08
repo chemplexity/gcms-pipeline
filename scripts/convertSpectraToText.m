@@ -1,11 +1,11 @@
-% function convertSpectraToText(channelArray, intensityArray)
+function [channelString, intensityString] = convertSpectraToText(channelArray, intensityArray)
 
-% input will be channelArray, intensityArray both many columns, 1 row
+% ------------------------------------------------------------------------
+% Method      : convertSpectraToText
+% Description : converts channelArray and intensityArray each to a comma
+% separated text string
+% ------------------------------------------------------------------------
 
-% convert channelArray to comma separted text string
-    % 10, 10.100, 10.200, 10.300, .... to end
+channelString = strjoin(compose("%.13f", channelArray), ",");
 
-% convert intensityArray to comma text string
-    % 1165700, 0, 0, 0, 0, 0, ....
-
-% return two strings channelString, intensityString
+intensityString = strjoin(compose("%.13f", intensityArray), ",");

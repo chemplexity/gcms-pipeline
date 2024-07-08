@@ -10,6 +10,4 @@ indexStart = lookupTimeIndex(timeArray, timeStart);
 
 indexEnd = lookupTimeIndex(timeArray, timeEnd);
 
-disp([indexStart, indexEnd]);
-
 end
