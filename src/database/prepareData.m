@@ -1,4 +1,4 @@
-function db = prepareData(data)
+function db = PrepareData(data)
 
 db = [];
 

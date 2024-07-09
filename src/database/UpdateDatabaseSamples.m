@@ -1,4 +1,4 @@
-function status = addToSample(conn, db, varargin)
+function status = UpdateDatabaseSamples(conn, db, varargin)
 
 if ~isopen(conn)
     status = 'connection is closed';
