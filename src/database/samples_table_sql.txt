@@ -7,7 +7,7 @@ create table samples
     file_name       TEXT    not null,
     file_path       TEXT    not null,
     sequence_number integer not null,
-    file_checksum   TEXT    not null,
+    md5_checksum   TEXT    not null,
     file_size       TEXT    not null,
     file_version    TEXT,
     sample_info     TEXT,

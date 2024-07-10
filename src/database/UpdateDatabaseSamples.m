@@ -15,7 +15,8 @@ table = 'samples';
 field = 'md5_checksum';
 index = [];
 
-if length(unique({db.(field)})) < length(db)
+% changed
+if length(unique(db.(field))) < length(db)
     status = 'remove duplicate files from input and try again';
     return
 end
@@ -27,19 +28,21 @@ if ~skipDuplicateCheck
     for i = 1:length(db)
         
         fprintf(['[', num2str(i), '/', num2str(length(db)), '] ']);
-        
-        query = [...
-            'SELECT COUNT(*) ',...
-            'FROM ', table, ' ',...
-            'WHERE ', field, '=''', db(i).(field), ''''];
+       
+        query = [sprintf('%s', ...
+            'SELECT COUNT(*)', ...
+            'FROM ', table, ' ', ...
+            'WHERE ', field, '=''', char(db(i).(field)), '''')];
         
         if isempty(db(i).(field))
             data{1} = 1;
         elseif isopen(conn)
-            curs = exec(conn, query);
-            curs = fetch(curs);
-            data = curs.Data;
-            close(curs);
+            % changed
+            % curs = exec(conn, query);
+            % curs = fetch(curs);
+            % data = curs.Data;
+            % close(curs);
+            data = fetch(conn, query);
         else
             data{1} = 1;
         end
@@ -68,6 +71,7 @@ if ~skipDuplicateCheck
 end
 
 cols = fields(db)';
+colNames = {strjoin(cols)};
 rows = {};
 
 for i = 1:length(db)
@@ -81,7 +85,10 @@ end
 fprintf(['[INSERT] ' num2str(length(rows(:,1))), ' samples\n']);
 fprintf('[INSERT] please wait....\n');
 
-datainsert(conn, table, cols, rows);
+data = cell2table(rows, 'VariableNames', cols);
+
+% datainsert(conn, table, rows);
+sqlwrite(conn, table, data);
 
 status = ['added samples: ', num2str(length(rows(:,1)))];
 

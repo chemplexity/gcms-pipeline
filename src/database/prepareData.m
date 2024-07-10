@@ -1,9 +1,11 @@
-function db = PrepareData(data)
+function db = prepareData(data)
 
 db = [];
 
 for i = 1:length(data)
     
+    % okay to alter original data here?
+    data = addChecksum(data);
     db(i).file_path = data(i).file_path;
     db(i).file_name = data(i).file_name;
     db(i).file_name = strrep(db(i).file_name, '/', '\');
@@ -20,7 +22,7 @@ for i = 1:length(data)
         db(i).file_version = 0;
     end
     
-    db(i).md5_checksum = data(i).file_checksum;
+    db(i).md5_checksum = data(i).checksum;
     db(i).sample_name  = data(i).sample_name;
     
     if ~isempty(data(i).datetime)
@@ -32,8 +34,8 @@ for i = 1:length(data)
     db(i).instrument_model = data(i).instmodel;
     db(i).instrument_inlet = data(i).inlet;
     db(i).method_name      = data(i).method_name;
-    db(i).sequence_path    = data(i).sequence_path;
-    db(i).sequence_name    = data(i).sequence_name;
+    % db(i).sequence_path    = data(i).sequence_path;
+    % db(i).sequence_name    = data(i).sequence_name;
     db(i).sequence_index   = data(i).seqindex;
     db(i).vial_index       = data(i).vial;
     db(i).replicate_index  = data(i).replicate;

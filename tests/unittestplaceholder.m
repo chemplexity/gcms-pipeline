@@ -99,12 +99,6 @@ assert(abs(expEndTime - actEndTime) < 1E-15);
 
 
 %% preprocessData (1 tests)
-% save the num col before preproccesing, then assert that after centroiding
-% num of cols is less than before
-
-% assert the time ranges are correct
-
-% assert baseline is present
 
 numChanCol = size(data(1).channel, 2);
 numIntCol = size(data(1).intensity, 2);
@@ -125,3 +119,40 @@ assert(abs(startTime - actStartTime) < 1E-15);
 assert(abs(endTime - actEndTime) < 1E-15);
 assert(isfield(processedData, 'baseline'));
 
+%% convertSpectraToText (3 tests)
+
+% Test case 1
+chanArray = [0, 14.9000000000000, 15, 15.1000000000000, 15.2000000000000, 15.3000000000000];
+intArray = [676507, 0, 0, 0, 0, 0, 0, 0, 0];
+
+expChanString = '0.0000, 14.9000, 15.0000, 15.1000, 15.2000, 15.3000';
+expIntString = '676507, 0, 0, 0, 0, 0, 0, 0, 0';
+
+[actChanString, actIntString] = convertSpectraToText(chanArray, intArray);
+
+assert(strcmp(expChanString, actChanString));
+assert(strcmp(expIntString, actIntString));
+
+% Test case 2
+chanArray = [1.0000000, 2.00000000, 3.33333333, 4.444444];
+intArray = [0, 0, 0, 13, 0, 0];
+
+expChanString = '1.0000, 2.0000, 3.3333, 4.4444';
+expIntString = '0, 0, 0, 13, 0, 0';
+
+[actChanString, actIntString] = convertSpectraToText(chanArray, intArray);
+
+assert(strcmp(expChanString, actChanString));
+assert(strcmp(expIntString, actIntString));
+
+% Test case 3
+chanArray = [0, 10, 10.1000000000000, 10.2000000000000, 10.3000000000000, 10.4000000000000];
+intArray = [666362, 0, 0, 4, 0, 0, 4];
+
+expChanString = '0.0000, 10.0000, 10.1000, 10.2000, 10.3000, 10.4000';
+expIntString = '666362, 0, 0, 4, 0, 0, 4';
+
+[actChanString, actIntString] = convertSpectraToText(chanArray, intArray);
+
+assert(strcmp(expChanString, actChanString));
+assert(strcmp(expIntString, actIntString));

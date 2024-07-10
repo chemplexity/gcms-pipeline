@@ -8,7 +8,7 @@ function data = addChecksum(data)
 
 for i=1: size(data, 1)
 
-    fullFileName = data(i).file_path + filesep + data(i).file_name;
+    fullFileName = strcat(data(i).file_path, '/', data(i).file_name);
     data(i).checksum = GetFileChecksum(fullFileName, 'hash', 'MD5');
     
 end
