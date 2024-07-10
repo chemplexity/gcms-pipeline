@@ -6,6 +6,6 @@ function [channelString, intensityString] = convertSpectraToText(channelArray, i
 % separated text string
 % ------------------------------------------------------------------------
 
-channelString = strjoin(compose("%.13f", channelArray), ",");
+channelString = strjoin(compose("%.4f", channelArray), ", ");
 
-intensityString = strjoin(compose("%.13f", intensityArray), ",");
+intensityString = strjoin(compose("%.0f", intensityArray), ", ");
