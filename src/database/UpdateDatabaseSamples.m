@@ -1,5 +1,12 @@
 function status = UpdateDatabaseSamples(conn, db, varargin)
 
+% ------------------------------------------------------------------------
+% Method      : UpdateDatabaseSamples()
+% Description : connets to the SQL .db file, checks for dulpicate files
+% in the passed in data, formats the data in a table, and adds it to 
+% the SQL database
+% ------------------------------------------------------------------------
+
 if ~isopen(conn)
     status = 'connection is closed';
     return
@@ -88,6 +95,8 @@ fprintf('[INSERT] please wait....\n');
 data = cell2table(rows, 'VariableNames', cols);
 
 % datainsert(conn, table, rows);
+% read
+%outputs the conneciton (conn)
 sqlwrite(conn, table, data);
 
 status = ['added samples: ', num2str(length(rows(:,1)))];

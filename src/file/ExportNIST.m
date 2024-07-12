@@ -1,12 +1,15 @@
 % Export NIST (preliminary function)
 
-% function to save a peak as a NIST formatted data structur
+% function to save a peak as a NIST formatted data structure
 
 % input will be sample info, peaks mass spectra (intensity(row, :)), and
 % channel (1,:)
 
-% function takes two inputs, 1: sample row, 2: peak mz array, 3: peak
-% intesity array
+% function takes three inputs, 1: sample row, 2: peak mz array, 3: peak
+% intensity array
+
+% might be easier for it to just take in the data object here? 
+function data = ExportNIST(sampleRow, channelArray, intensityArray, timeArray)
 
 % ---------------------------------------
 % Data
@@ -33,3 +36,10 @@ data = struct(...
     'num_peaks',                [],...
     'mz',                       [],...
     'intensity',                []);
+
+channelData = channelArray(1, :);
+peakMassSpectra = intensityArray(sampleRow, :);
+
+data(1).mz = channelData;
+data(1).intensity = peakMassSpectra;
+data(1).compound_retention_time = timeArray(sampleRow, 1);
