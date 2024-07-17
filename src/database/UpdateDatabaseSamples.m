@@ -1,5 +1,5 @@
 function status = UpdateDatabaseSamples(conn, db, varargin)
-
+ 
 % ------------------------------------------------------------------------
 % Method      : UpdateDatabaseSamples()
 % Description : connets to the SQL .db file, checks for dulpicate files
@@ -22,8 +22,7 @@ table = 'samples';
 field = 'md5_checksum';
 index = [];
 
-% changed
-if length(unique(db.(field))) < length(db)
+if length(unique(string({db.(field)}))) < length(db)
     status = 'remove duplicate files from input and try again';
     return
 end
@@ -44,11 +43,6 @@ if ~skipDuplicateCheck
         if isempty(db(i).(field))
             data{1} = 1;
         elseif isopen(conn)
-            % changed
-            % curs = exec(conn, query);
-            % curs = fetch(curs);
-            % data = curs.Data;
-            % close(curs);
             data = fetch(conn, query);
         else
             data{1} = 1;
@@ -94,9 +88,6 @@ fprintf('[INSERT] please wait....\n');
 
 data = cell2table(rows, 'VariableNames', cols);
 
-% datainsert(conn, table, rows);
-% read
-%outputs the conneciton (conn)
 sqlwrite(conn, table, data);
 
 status = ['added samples: ', num2str(length(rows(:,1)))];
