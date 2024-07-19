@@ -9,7 +9,7 @@
 % intensity array
 
 % might be easier for it to just take in the data object here? 
-function data = ExportNIST(sampleRow, channelArray, intensityArray, timeArray)
+function data = ExportNIST(sampleRow, dataRow)
 
 % ---------------------------------------
 % Data
@@ -37,9 +37,12 @@ data = struct(...
     'mz',                       [],...
     'intensity',                []);
 
-channelData = channelArray(1, :);
-peakMassSpectra = intensityArray(sampleRow, :);
+channelData = dataRow.channel(1, :);
+peakMassSpectra = dataRow.intensity(sampleRow, :);
 
 data(1).mz = channelData;
 data(1).intensity = peakMassSpectra;
-data(1).compound_retention_time = timeArray(sampleRow, 1);
+data(1).compound_retention_time = dataRow.time(sampleRow, 1);
+data(1).file_path = dataRow.file_path;
+data(1).file_name = dataRow.file_name;
+data(1).file_size = dataRow.file_size;

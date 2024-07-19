@@ -1,4 +1,4 @@
-function status = UpdateDatabaseSamples(conn, db, varargin)
+function status = UpdateDatabaseSamples(db, samplesData, varargin)
  
 % ------------------------------------------------------------------------
 % Method      : UpdateDatabaseSamples()
@@ -7,10 +7,7 @@ function status = UpdateDatabaseSamples(conn, db, varargin)
 % the SQL database
 % ------------------------------------------------------------------------
 
-if ~isopen(conn)
-    status = 'connection is closed';
-    return
-end
+conn = sqlite(db);
 
 if ~isempty(varargin) && islogical(varargin{1})
     skipDuplicateCheck = varargin{1};
@@ -21,49 +18,56 @@ end
 table = 'samples';
 field = 'md5_checksum';
 index = [];
-
-if length(unique(string({db.(field)}))) < length(db)
-    status = 'remove duplicate files from input and try again';
-    return
-end
+inputDups = [];
 
 if ~skipDuplicateCheck
     
     fprintf('Checking for Duplicates\n');
     
-    for i = 1:length(db)
-        
-        fprintf(['[', num2str(i), '/', num2str(length(db)), '] ']);
+    for i = 1:length(samplesData)
+
+        if i > length(samplesData)
+            fprintf(['[' num2str(i), ' was removed as a duplicate] \n']);
+            break
+        end 
+       
+        fprintf(['[', num2str(i), '/', num2str(length(samplesData)), '] ']);
        
         query = [sprintf('%s', ...
             'SELECT COUNT(*)', ...
             'FROM ', table, ' ', ...
-            'WHERE ', field, '=''', char(db(i).(field)), '''')];
+            'WHERE ', field, '=''', char(samplesData(i).(field)), '''')];
         
-        if isempty(db(i).(field))
+        if isempty(samplesData(i).(field))
             data{1} = 1;
-        elseif isopen(conn)
+        else
             data = fetch(conn, query);
-        else
-            data{1} = 1;
         end
         
-        if iscell(data) && data{1} ~= 0
+        if istable(data) && data{1,1} ~= 0
             index(end+1) = i;
-            fprintf('[DUPLICATE] ');
-            disp(db(i).file_path);
-        else
-            fprintf('[OK] \n');
-        end
-        
+            fprintf('[DUPLICATE IN DATABASE] ');
+            disp(samplesData(i).file_path);
+        end 
+           
+        for j = 1:length(samplesData)
+            if i~=j && strcmp(samplesData(i).(field), samplesData(j).(field))
+                inputDups(end+1) = j;
+                fprintf('[DUPLICATE IN INPUT DATA] ')
+                disp(samplesData(i).file_path);
+                samplesData(j) = [];
+            end
+        end 
     end
     
     if ~isempty(index)
-        db(index) = [];
-        fprintf(['[IGNORE] ' num2str(length(index)), '\n']);
+        samplesData(index) = [];
+        fprintf(['[IGNORE] ' num2str(length(index) + length(inputDups)), '\n']);
+    else
+        fprintf('[OK] \n');
     end
     
-    if isempty(db)
+    if isempty(samplesData)
         status = 'no data';
         fprintf('[ERROR] No samples to add\n');
         return
@@ -71,14 +75,14 @@ if ~skipDuplicateCheck
     
 end
 
-cols = fields(db)';
+cols = fields(samplesData)';
 colNames = {strjoin(cols)};
 rows = {};
 
-for i = 1:length(db)
+for i = 1:length(samplesData)
     
     for j = 1:length(cols)
-        rows{i,j} = db(i).(cols{j}); 
+        rows{i,j} = samplesData(i).(cols{j}); 
     end
 
 end
@@ -93,5 +97,7 @@ sqlwrite(conn, table, data);
 status = ['added samples: ', num2str(length(rows(:,1)))];
 
 fprintf('[FINISH] Database update complete!\n');
+
+close(conn);
 
 end

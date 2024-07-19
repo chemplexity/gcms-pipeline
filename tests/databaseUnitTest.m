@@ -33,24 +33,23 @@ assert(length({preppedData.md5_checksum}) == length(preppedData));
 
 %% UpdateDatabaseSamples
 
-% Test case 1 (checks for closed connection)
-conn = sqlite('/Users/isabella/Desktop/gcms-pipeline/src/database/GCMS_Database.db');
-close(conn);
-preppedData = prepareDataSamples(data);
-result = UpdateDatabaseSamples(conn, preppedData);
-assert(strcmp(result, 'connection is closed'));
-
-% Test case 2 (checks for duplicate data)
+% Test case 1 (checks for duplicate data)
 duplicateData = ImportAgilent('file', {'./examples/data/Ketones Mix 100ngmL.D', ...
     './examples/data/Ketones Mix 100ngmL.D'});
-
-conn = sqlite('./src/database/GCMS_Database.db');
 preppedDuplicates = prepareDataSamples(duplicateData);
-dupResult = UpdateDatabaseSamples(conn, preppedDuplicates);
-assert(strcmp(dupResult, 'remove duplicate files from input and try again'));
 
-% Test case 3 (general case)
-conn = sqlite('./src/database/GCMS_Database.db');
+delete('./src/database/GCMS_Database.db');
+CreateDatabase();
+
+dupResult = UpdateDatabaseSamples('./src/database/GCMS_Database.db', ...
+    preppedDuplicates);
+assert(strcmp(dupResult, 'added samples: 1'));
+
+% Test case 2 (general case)
+delete('./src/database/GCMS_Database.db');
+CreateDatabase();
+
 preppedData = prepareDataSamples(data);
-result = UpdateDatabaseSamples(conn, preppedData);
+result = UpdateDatabaseSamples('./src/database/GCMS_Database.db', ...
+    preppedData);
 assert(strcmp(result, 'added samples: 2'));

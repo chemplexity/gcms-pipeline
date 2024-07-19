@@ -25,11 +25,7 @@ create table samples
     start_time      REAL,
     end_time        REAL,
     sampling_rate   REAL,
-    time            REAL,
-    intensity       REAL,
-    channel         REAL,
     time_units      TEXT,
     intensity_units TEXT,
-    channel_units   TEXT,
-    baseline        REAL
+    channel_units   TEXT
 );
