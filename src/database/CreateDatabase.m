@@ -30,3 +30,4 @@ sqlquery = samplesText;
 execute(conn, sqlquery);
 
 close(conn)
+fprintf("Database created: " + p.Results.filename + "\n");

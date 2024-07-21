@@ -8,13 +8,12 @@
 % function takes three inputs, 1: sample row, 2: peak mz array, 3: peak
 % intensity array
 
-% might be easier for it to just take in the data object here? 
-function data = ExportNIST(sampleRow, dataRow)
+function nistData = ExportNIST(data, sampleRow, retentionTimes)
 
 % ---------------------------------------
 % Data
 % ---------------------------------------
-data = struct(...
+nistData = struct(...
     'file_path',                [],...
     'file_name',                [],...
     'file_size',                [],...
@@ -37,12 +36,12 @@ data = struct(...
     'mz',                       [],...
     'intensity',                []);
 
-channelData = dataRow.channel(1, :);
-peakMassSpectra = dataRow.intensity(sampleRow, :);
+channelData = data.channel(1, :);
+peakMassSpectra = data.intensity(sampleRow, :);
 
-data(1).mz = channelData;
-data(1).intensity = peakMassSpectra;
-data(1).compound_retention_time = dataRow.time(sampleRow, 1);
-data(1).file_path = dataRow.file_path;
-data(1).file_name = dataRow.file_name;
-data(1).file_size = dataRow.file_size;
+nistData(1).mz = channelData;
+nistData(1).intensity = peakMassSpectra;
+nistData(1).compound_retention_time = dataRow.time(sampleRow, 1);
+nistData(1).file_path = data.file_path;
+nistData(1).file_name = data.file_name;
+nistData(1).file_size = data.file_size;

@@ -9,6 +9,10 @@ if timeEnd <= timeStart
 
     error('This is not a valid time range');
 
+elseif timeStart > timeArray(end)
+
+    error('timeStart exceeds all values in timeArray');
+
 end
 
 [startInd, endInd] = lookupTimeRangeIndex(timeArray, timeStart, timeEnd);
