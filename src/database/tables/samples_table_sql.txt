@@ -1,0 +1,31 @@
+create table samples
+(
+    sample_id       integer not null
+        constraint sample_id
+            primary key,
+    sample_name     TEXT,
+    file_name       TEXT    not null,
+    file_path       TEXT    not null,
+    sequence_index  integer,
+    md5_checksum    TEXT    not null,
+    file_size       TEXT    not null,
+    file_extension  TEXT,
+    file_version    TEXT,
+    sample_info     TEXT,
+    sample_datetime TEXT,
+    operator        TEXT,
+    date_created    TEXT,
+    instrument      TEXT,
+    instr_model     TEXT,
+    inlet           TEXT,
+    method_name     TEXT,
+    vial            REAL,
+    replicate       REAL,
+    injvol          REAL,
+    start_time      REAL,
+    end_time        REAL,
+    sampling_rate   REAL,
+    time_units      TEXT,
+    intensity_units TEXT,
+    channel_units   TEXT
+);

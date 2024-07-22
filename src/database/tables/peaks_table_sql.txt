@@ -1,0 +1,21 @@
+create table peaks
+(
+    peak_id      integer not null
+        constraint peak_id
+            primary key,
+    peak_time    REAL    not null,
+    peak_area    REAL    not null,
+    peak_width   REAL    not null,
+    peak_height  REAL    not null,
+    area_Of      REAL,
+    error        REAL,
+    model        TEXT,
+    x_lim        REAL,
+    y_lim        REAL,
+    input_x      REAL,
+    input_y      REAL,
+    date_created TEXT,
+    sample_id    integer
+        constraint sample_id
+            references samples
+);
