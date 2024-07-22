@@ -1,14 +1,9 @@
-% Export NIST (preliminary function)
-
-% function to save a peak as a NIST formatted data structure
-
-% input will be sample info, peaks mass spectra (intensity(row, :)), and
-% channel (1,:)
-
-% function takes three inputs, 1: sample row, 2: peak mz array, 3: peak
-% intensity array
-
 function nistData = ExportNIST(data, sampleRow, retentionTimes)
+
+% ------------------------------------------------------------------------
+% Method      : ExportNIST()
+% Description : saves peak data as a NIST formatted data structure
+% ------------------------------------------------------------------------
 
 % ---------------------------------------
 % Data
@@ -36,12 +31,21 @@ nistData = struct(...
     'mz',                       [],...
     'intensity',                []);
 
-channelData = data.channel(1, :);
-peakMassSpectra = data.intensity(sampleRow, :);
+for i=1:size(retentionTimes)
 
-nistData(1).mz = channelData;
-nistData(1).intensity = peakMassSpectra;
-nistData(1).compound_retention_time = dataRow.time(sampleRow, 1);
-nistData(1).file_path = data.file_path;
-nistData(1).file_name = data.file_name;
-nistData(1).file_size = data.file_size;
+    % assuming the index should be based on ALL retention times from 
+    % the original data and not just the peaks (so that it lines up
+    % with mz)
+    index = lookupTimeIndex(data(sampleRow).time, retentionTimes(i));
+    channelData = data(sampleRow).channel(1, :);
+    peakMassSpectra = data.intensity(index, :);
+    
+    nistData(i).mz = channelData;
+    nistData(i).intensity = peakMassSpectra;
+    nistData(i).compound_retention_time = retentionTimes(i);
+    nistData(i).file_path = data(sampleRow).file_path;
+    nistData(i).file_name = data(sampleRow).file_name;
+    nistData(i).file_size = data(sampleRow).file_size;
+
+    % ask about this
+end 
