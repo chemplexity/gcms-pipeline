@@ -48,7 +48,7 @@ net.plotFcns = {'plotperform','plottrainstate','ploterrhist', ...
 % Test the Network
 y = net(x);
 e = gsubtract(t,y);
-performance = perform(net,t,y)
+performance = perform(net,t,y);
 tind = vec2ind(t);
 yind = vec2ind(y);
 percentErrors = sum(tind ~= yind)/numel(tind);
@@ -57,12 +57,14 @@ percentErrors = sum(tind ~= yind)/numel(tind);
 trainTargets = t .* tr.trainMask{1};
 valTargets = t .* tr.valMask{1};
 testTargets = t .* tr.testMask{1};
-trainPerformance = perform(net,trainTargets,y)
-valPerformance = perform(net,valTargets,y)
-testPerformance = perform(net,testTargets,y)
+trainPerformance = perform(net,trainTargets,y);
+valPerformance = perform(net,valTargets,y);
+testPerformance = perform(net,testTargets,y);
 
 % View the Network
 view(net)
+
+save('./src/peak/trainedNeuralNetwork.mat', 'net');
 
 % Plots
 % Uncomment these lines to enable various plots.
