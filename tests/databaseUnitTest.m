@@ -53,3 +53,22 @@ preppedData = prepareDataSamples(data);
 result = UpdateDatabaseSamples('./src/database/GCMS_Database.db', ...
     preppedData);
 assert(strcmp(result, 'added samples: 2'));
+
+%% getSampleIDFromChecksum
+
+% Test case 1 (checksum doesn't exist)
+delete('./src/database/GCMS_Database.db');
+CreateDatabase();
+
+ketonesMix = ImportAgilent('file', './examples/data/Ketones Mix 100ngmL.D');
+preppedKetones = prepareDataSamples(ketonesMix);
+UpdateDatabaseSamples('./src/database/GCMS_Database.db', preppedKetones);
+
+sampleID = getSampleIDFromChecksum('./src/database/GCMS_Database.db', ...
+    '282AD5F24A6B62D10100AD28347B2A1');
+assert(isempty(sampleID));
+
+% Test case 2 (checksum does exist)
+sampleID = getSampleIDFromChecksum('./src/database/GCMS_Database.db', ...
+    '2B82AD5F24A6B62D10100AD28347B2A1');
+assert(strcmp("1", sampleID));
