@@ -1,22 +1,22 @@
-% Script will do 2 things for peak detection:
-    % 1) perform peakfindNN on data.time, data.intensity(:,1)
-        % - find all peak locations in the signal
-        % - returns 2 columns (peak centers (x), peak tops (y))
-    % 2) perform peakfitNN at each peak location
-        % store all peaks in struct
-        % return struct
+function peakList = detectPeaksInData(data, sampleIndex)
 
-% Plot examples
-% Sample TIC
-% plot(data(1).time, data(1).intensity(:,1))
-% hold all
-%
-% Plot all peaks with markers
-% plot(peaks(:,1), peaks(:,2), '.', 'markersize', 15)
+% ------------------------------------------------------------------------
+% Method      : detectPeaksInData()
+% Description : runs the peak detection NN to detect all peaks in the 
+% specified sample, then runs the peak fitting NN to fit all peaks and
+% calculate their areas; stores all peak info in the peakList struct
+% ------------------------------------------------------------------------
 
-% Plot the fitted line to signal
-% plot(peak.fit(:,1),peak.fit(:,2))
+peaks = peakfindNN(data(sampleIndex).time, ...
+    data(sampleIndex).intensity(:, 1));
 
-% input is data, sampleIndex
-% output is list of peaks
- 
+peakList = [];
+
+for i=1:length(peaks)
+    fittedPeakStruct = peakfitNN(data(sampleIndex).time, ...
+        data(sampleIndex).intensity(:, 1), peaks(i, 1));
+    fittedPeakStruct.peakCenterX = peaks(i, 1);
+    fittedPeakStruct.peakCenterY = peaks(i, 2);
+    peakList = [peakList, fittedPeakStruct];
+end
+

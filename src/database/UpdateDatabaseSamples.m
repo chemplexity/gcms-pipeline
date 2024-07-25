@@ -2,7 +2,7 @@ function status = UpdateDatabaseSamples(db, samplesData, varargin)
  
 % ------------------------------------------------------------------------
 % Method      : UpdateDatabaseSamples()
-% Description : connets to the SQL .db file, checks for dulpicate files
+% Description : connects to the SQL .db file, checks for dulpicate files
 % in the passed in data, formats the data in a table, and adds it to 
 % the SQL database
 % ------------------------------------------------------------------------
