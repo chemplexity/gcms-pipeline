@@ -10,10 +10,12 @@ create table peaks
     area_Of      REAL,
     error        REAL,
     model        TEXT,
-    x_lim        REAL,
-    y_lim        REAL,
-    input_x      REAL,
-    input_y      REAL,
+    x_min        REAL, 
+    x_max        REAL, 
+    y_min        REAL, 
+    y_max        REAL,
+    input_x      TEXT,
+    input_y      TEXT,
     date_created TEXT,
     sample_id    integer
         constraint sample_id

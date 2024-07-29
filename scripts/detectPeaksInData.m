@@ -1,4 +1,4 @@
-function peakList = detectPeaksInData(data, sampleIndex)
+function data = detectPeaksInData(data, sampleIndex)
 
 % ------------------------------------------------------------------------
 % Method      : detectPeaksInData()
@@ -20,3 +20,4 @@ for i=1:length(peaks)
     peakList = [peakList, fittedPeakStruct];
 end
 
+data(sampleIndex).peaks = peakList;

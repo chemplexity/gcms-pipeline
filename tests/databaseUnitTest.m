@@ -72,3 +72,50 @@ assert(isempty(sampleID));
 sampleID = getSampleIDFromChecksum('./src/database/GCMS_Database.db', ...
     '2B82AD5F24A6B62D10100AD28347B2A1');
 assert(strcmp("1", sampleID));
+
+%% detectPeaksInData
+
+% Test case 1
+data = ImportAgilent('file', './examples/data/Ketones Mix 100ngmL.D');
+data = detectPeaksInData(data, 1);
+assert(isfield(data, 'peaks'));
+assert(length(data(1).peaks) == 157);
+
+% Test case 2
+data = ImportAgilent('file', './examples/data/Ketones_Aldehydes_Mix 100 ngmL.D');
+data = detectPeaksInData(data, 1);
+assert(isfield(data, 'peaks'));
+assert(length(data(1).peaks) == 166);
+
+%% prepareDataPeaks
+
+% Test case 1 
+db = './src/database/GCMS_Database.db';
+delete(db);
+CreateDatabase();
+
+data = ImportAgilent('file', './examples/data/Ketones Mix 100ngmL.D');
+preppedSamples = prepareDataSamples(data);
+UpdateDatabaseSamples(db, preppedSamples);
+data = detectPeaksInData(data, 1);
+
+preppedData = prepareDataPeaks(db, data, 1);
+assert(length(fieldnames(preppedData)) == 15);
+assert(isfield(preppedData, 'sample_id'));
+
+%% UpdateDatabasePeaks
+
+% Test case 1
+db = './src/database/GCMS_Database.db';
+delete(db);
+CreateDatabase();
+
+data = ImportAgilent('file', './examples/data/Ketones Mix 100ngmL.D');
+preppedSamples = prepareDataSamples(data);
+UpdateDatabaseSamples(db, preppedSamples);
+data = detectPeaksInData(data, 1);
+
+preppedData = prepareDataPeaks(db, data, 1);
+result = UpdateDatabasePeaks('./src/database/GCMS_Database.db', ...
+    preppedData);
+assert(strcmp(result, 'added peaks: 157'));
