@@ -244,7 +244,11 @@ if isempty(top_match)
 end
 
 % Populate output with top matches (w/ no duplicates)
-while length(matches) < options.num_matches || top_match_index > length(top_match)
+while length(matches) < options.num_matches
+    if top_match_index > length(top_match)
+        break
+    end
+    
     match_index = find(spectral_match == top_match(top_match_index));
     
     % Check for duplicates
