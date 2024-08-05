@@ -1,4 +1,4 @@
-function data = detectPeaksInData(data, sampleIndex)
+function data = detectPeaksInData(data)
 
 % ------------------------------------------------------------------------
 % Method      : detectPeaksInData()
@@ -7,17 +7,23 @@ function data = detectPeaksInData(data, sampleIndex)
 % calculate their areas; stores all peak info in the peakList struct
 % ------------------------------------------------------------------------
 
-peaks = peakfindNN(data(sampleIndex).time, ...
-    data(sampleIndex).intensity(:, 1));
+for i=1:length(data)
 
-peakList = [];
+    peaks = peakfindNN(data(i).time, ...
+        data(i).intensity(:, 1));
+    peakList = [];
 
-for i=1:length(peaks)
-    fittedPeakStruct = peakfitNN(data(sampleIndex).time, ...
-        data(sampleIndex).intensity(:, 1), peaks(i, 1));
-    fittedPeakStruct.peakCenterX = peaks(i, 1);
-    fittedPeakStruct.peakCenterY = peaks(i, 2);
-    peakList = [peakList, fittedPeakStruct];
+    for j=1:length(peaks)
+
+        fittedPeakStruct = peakfitNN(data(i).time, ...
+            data(i).intensity(:, 1), peaks(j, 1));
+        fittedPeakStruct.peakCenterX = peaks(j, 1);
+        fittedPeakStruct.peakCenterY = peaks(j, 2);
+        peakList = [peakList, fittedPeakStruct];
+
+    end
+
+    data(i).peaks = peakList;
+   
 end
 
-data(sampleIndex).peaks = peakList;

@@ -29,5 +29,10 @@ samplesText = strjoin(samplesTextArray);
 sqlquery = samplesText;
 execute(conn, sqlquery);
 
+peaksTextArray = readlines('./src/database/tables/peaks_table_sql.txt');
+peaksText = strjoin(peaksTextArray);
+sqlquery = peaksText;
+execute(conn, sqlquery);
+
 close(conn)
 fprintf("Database created: " + p.Results.filename + "\n");

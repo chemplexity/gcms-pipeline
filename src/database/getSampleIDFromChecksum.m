@@ -22,7 +22,7 @@ data = fetch(conn, query);
 
 if isempty(data)
     fprintf('There is no sample with this checksum \n')
-    sampleID = {}; 
+    sampleID = NaN; 
     return
 end
 

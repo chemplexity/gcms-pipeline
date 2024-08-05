@@ -31,7 +31,7 @@ if ~skipDuplicateCheck
             break
         end 
        
-        fprintf(['[', num2str(i), '/', num2str(length(samplesData)), '] ']);
+        fprintf(['[', num2str(i), '/', num2str(length(samplesData)), '] \n']);
        
         query = [sprintf('%s', ...
             'SELECT COUNT(*)', ...
@@ -54,7 +54,7 @@ if ~skipDuplicateCheck
             if i~=j && strcmp(samplesData(i).(field), samplesData(j).(field))
                 inputDups(end+1) = j;
                 fprintf('[DUPLICATE IN INPUT DATA] ')
-                disp(samplesData(i).file_path);
+                disp(samplesData(j).file_path);
                 samplesData(j) = [];
             end
         end 

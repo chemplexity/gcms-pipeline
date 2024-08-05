@@ -12,7 +12,7 @@ data = addChecksum(data);
 
 for i=1:length(data(sampleRow).peaks)
 
-    db(i).peak_time = data(sampleRow).peaks(i).time;
+    db(i).peak_time = sprintf('%.14f', data(sampleRow).peaks(i).time);
     db(i).peak_area = data(sampleRow).peaks(i).area;
     db(i).peak_width = data(sampleRow).peaks(i).width;
     db(i).peak_height = data(sampleRow).peaks(i).height;
@@ -23,10 +23,8 @@ for i=1:length(data(sampleRow).peaks)
     db(i).x_max = data(sampleRow).peaks(i).xmax;
     db(i).y_min = data(sampleRow).peaks(i).ymin;
     db(i).y_max = data(sampleRow).peaks(i).ymax;
-    % confirm these
     db(i).input_x = data(sampleRow).peaks(i).peakCenterX;
     db(i).input_y = data(sampleRow).peaks(i).peakCenterY;
-
     db(i).date_created = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
     db(i).sample_id = getSampleIDFromChecksum(database, ...
         data(sampleRow).checksum);
