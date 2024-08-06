@@ -92,33 +92,33 @@ options.mz_step     = p.Results.mz_step;
 
 % Input: mz
 if numel(mz) <= 0
-    fprintf('[ERROR] mz is empty...');
+    fprintf('[ERROR] mz is empty...\n');
     return
 end
 
 % Input: intensity
 if numel(intensity) <= 0
-    fprintf('[ERROR] intensity is empty...');
+    fprintf('[ERROR] intensity is empty...\n');
     return
 end
 
 if length(mz) ~= length(intensity)
-    fprintf('[ERROR] mz and intensity are different lengths...');
+    fprintf('[ERROR] mz and intensity are different lengths...\n');
     return
 end
 
 % Input: library
 if numel(library) <= 0
-    fprintf('[ERROR] Library is empty...');
+    fprintf('[ERROR] Library is empty...\n');
     return
 end
 
 if ~isfield(library, 'mz')
-    fprintf('[ERROR] Library does not contain "mz" field...');
+    fprintf('[ERROR] Library does not contain "mz" field...\n');
 end
 
 if ~isfield(library, 'intensity')
-    fprintf('[ERROR] Library does not contain "intensity" field...');
+    fprintf('[ERROR] Library does not contain "intensity" field...\n');
 end
 
 % Parameter: 'num_matches'
@@ -149,6 +149,8 @@ end
 % ---------------------------------------
 % Filter library data by m/z
 % ---------------------------------------
+removeIndex = [];
+
 for i = 1:length(library)
 
     if isempty(library(i).mz)
@@ -159,9 +161,9 @@ for i = 1:length(library)
     
     if ~isempty(options.min_mz) && ~isempty(options.max_mz)
         filter = library(i).mz >= options.min_mz(1) & library(i).mz <= options.max_mz(1);
-    elseif ~isempty(xmin)
+    elseif ~isempty(options.min_mz)
         filter = library(i).mz >= options.min_mz(1); 
-    elseif ~isempty(xmax)
+    elseif ~isempty(options.max_mz)
         filter = library(i).mz <= options.max_mz(1);
     else
         filter(1:length(library(i).mz)) = false;
@@ -169,7 +171,13 @@ for i = 1:length(library)
    
     library(i).mz = library(i).mz(filter);
     library(i).intensity = library(i).intensity(filter);
+
+    if isempty(library(i).mz)
+        removeIndex(end+1) = i;
+    end
 end
+
+library(removeIndex) = [];
 
 % ---------------------------------------
 % Prepare library data
@@ -192,9 +200,12 @@ for i = 1:length(library(:,1))
 end
 
 % Normalize library entries intensity
-for i = 1:length(library_intensity(:,1))
-    library_intensity(i,:) = library_intensity(i,:) / max(library_intensity(i,:));
-end
+ymin = min(library_intensity,[],2);
+ymax = max(library_intensity,[],2);
+
+library_intensity = bsxfun(@rdivide,...
+    bsxfun(@minus, library_intensity, ymin),...
+    bsxfun(@minus, ymax, ymin));
 
 % ---------------------------------------
 % Filter user data by m/z
@@ -248,7 +259,7 @@ while length(matches) < options.num_matches
     if top_match_index > length(top_match)
         break
     end
-    
+
     match_index = find(spectral_match == top_match(top_match_index));
     
     % Check for duplicates

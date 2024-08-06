@@ -100,6 +100,8 @@ function varargout = MassSpectra(varargin)
 % Check input
 [mz, y, options] = parse(varargin);
 
+[mz, y] = addZeroPadding(mz, y, options, 0.1);
+
 % Check for normalization
 if strcmpi(options.scale, 'relative')
     
@@ -723,7 +725,7 @@ if ~isempty(input('xlim'))
     if ~isnumeric(xlimits) || any(strcmpi(xlimits, {'default', 'auto'}))
         options.xlimits = [];
         
-    elseif xlimits(2) < xlimits(1) || length(xlimits) ~= 2;
+    elseif xlimits(2) < xlimits(1) || length(xlimits) ~= 2
         options.xlimits = [];
         
     else
@@ -840,5 +842,44 @@ if ~isempty(input('threshold'))
 else
     options.threshold = 0.01;
 end
+
+end
+
+function [mz, y] = addZeroPadding(mz, y, options, mzStep)
+
+% Get average distance between mz points
+if mean(diff(mz)) < 1 && length(mz) >= 100
+    return
+end
+
+if isempty(options.xlimits)
+    minMz = mz(1);
+    maxMz = mz(end);
+else
+    minMz = min([mz(1), options.xlimits(1)]);
+    maxMz = max([mz(end), options.xlimits(2)]);
+end
+
+mz0 = [];
+y0 = [];
+idx = 1;
+
+% Fill in resampled arrays with zeros
+for i = minMz:mzStep:maxMz
+    
+    if idx > length(mz) || i < mz(idx)
+        mz0(end+1) = i;
+        y0(end+1) = 0;
+    end
+
+    while idx <= length(mz) && i >= mz(idx)
+        mz0(end+1) = mz(idx);
+        y0(end+1) = y(idx);
+        idx = idx + 1;
+    end
+end
+
+mz = mz0;
+y = y0;
 
 end
