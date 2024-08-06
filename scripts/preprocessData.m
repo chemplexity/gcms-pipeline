@@ -10,7 +10,7 @@ function data = preprocessData(data, timeStart, timeEnd)
 baselineSmoothness = 1E7;
 baselineAsymmetry = 1E-4;
 
-for i=1:size(data, 1)
+for i = 1:size(data, 1)
     
     % Crop signal by start and end time
     data(i) = cropDataByTimeRange(data(i), timeStart, timeEnd);

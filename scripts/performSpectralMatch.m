@@ -130,8 +130,12 @@ end
 % ---------------------------------------
 % Spectral matching
 % ---------------------------------------
+fprintf(['\n', repmat('-',1,50), '\n']);
+fprintf(' Spectral Matching');
+fprintf(['\n', repmat('-',1,50), '\n\n']);
+
 fprintf(['[STATUS] Library contains ', num2str(length(library)), ' entries...\n']);
-fprintf(['[STATUS] Performing spectral matching on ', num2str(length(peaks)), ' peaks...\n']);
+fprintf(['[STATUS] Performing spectral matching on ', num2str(length(peaks)), ' peaks...\n\n']);
 
 for i = 1:length(peaks)
 
