@@ -17,6 +17,8 @@ create table peaks
     input_x      TEXT,
     input_y      TEXT,
     date_created TEXT,
+    peak_mz      TEXT,
+    peak_intens  TEXT,
     sample_id    integer
         constraint sample_id
             references samples

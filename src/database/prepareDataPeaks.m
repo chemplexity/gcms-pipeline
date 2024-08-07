@@ -1,4 +1,4 @@
-function db = prepareDataPeaks(database, data, sampleRow)
+function data = prepareDataPeaks(database, data, sampleRow)
 
 % ------------------------------------------------------------------------
 % Method      : prepareDataPeaks()
@@ -12,7 +12,7 @@ data = addChecksum(data);
 
 for i=1:length(data(sampleRow).peaks)
 
-    db(i).peak_time = sprintf('%.14f', data(sampleRow).peaks(i).time);
+    db(i).peak_time = sprintf('%.6f', data(sampleRow).peaks(i).time);
     db(i).peak_area = data(sampleRow).peaks(i).area;
     db(i).peak_width = data(sampleRow).peaks(i).width;
     db(i).peak_height = data(sampleRow).peaks(i).height;
@@ -28,4 +28,15 @@ for i=1:length(data(sampleRow).peaks)
     db(i).date_created = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
     db(i).sample_id = getSampleIDFromChecksum(database, ...
         data(sampleRow).checksum);
+    
+    indexOfPeakTime = lookupTimeIndex(data(sampleRow).time, ...
+        data(sampleRow).peaks(i).time);
+    
+    [mz, intensity] = convertSpectraToText(data(sampleRow).channel(1, 2:end), ...
+        data(sampleRow).intensity(indexOfPeakTime, 2:end));
+    db(i).peak_mz = mz;
+    db(i).peak_intens = intensity;
+
 end
+
+data(sampleRow).peaks = db;
