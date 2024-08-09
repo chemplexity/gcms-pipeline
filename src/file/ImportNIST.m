@@ -453,8 +453,12 @@ function f = parsefile(f)
 
 if ischar(f)
     
-    f = strsplit(f, '\r\n\r\n', 'delimitertype', 'regularexpression');
-   
+    if ispc
+        f = strsplit(f, '\r\n\r\n', 'delimitertype', 'regularexpression');
+    else
+        f = strsplit(f, '\n\n', 'delimitertype', 'regularexpression');
+    end
+
     if iscell(f) && isempty(f{end})
         f(end) = [];
     end
@@ -561,7 +565,7 @@ else
     str = cellfun(@(x) strtrim(deblank(x{1})), str, 'uniformoutput', 0);
 end
 
-if iscell(str) && length(str) == 1
+if iscell(str) && isscalar(str)
     str = str{1};
 end
 
