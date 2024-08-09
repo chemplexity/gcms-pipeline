@@ -113,7 +113,7 @@ for i = 1:length(library)
     elseif ~isempty(xmax)
         filter = library(i).mz <= options.max_mz(1);
     else
-        filter(1:length(library(i).mz)) = false;
+        filter(1:length(library(i).mz)) = true;
     end
    
     library(i).mz = library(i).mz(filter);
@@ -123,7 +123,11 @@ end
 % ---------------------------------------
 % Remove library entries by # of points
 % ---------------------------------------
-fprintf('[STATUS] Removing entries...\n');
+fprintf(['\n', repmat('-',1,50), '\n']);
+fprintf(' Cleanup Library');
+fprintf(['\n', repmat('-',1,50), '\n']);
+
+fprintf('[STATUS] Removing entries...\n\n');
 
 delete_index = [];
 
@@ -132,16 +136,16 @@ for i = 1:length(library)
     % Remove any spectra < min_points
     if length(library(i).mz) < options.min_points
         delete_index(end+1) = i;
-        fprintf(['[STATUS] Removing row #: ', num2str(i), '\n']);
+        fprintf(['[STATUS] Removing row #', num2str(i), ' (NumPoints: ', num2str(length(library(i).mz)),')\n']);
     end
     
     % Remove any spectra with NaN values
     if any(isnan(library(i).mz))
         delete_index(end+1) = i;
-        fprintf(['[STATUS] Removing row #: ', num2str(i), '\n']);
+        fprintf(['[STATUS] Removing row #', num2str(i), ' (NaN)\n']);
     end
 end
 
 library(delete_index) = [];
 
-fprintf(['[STATUS] # Rows removed: ', num2str(length(delete_index)), '\n']);
+fprintf(['\n[STATUS] Total rows removed: ', num2str(length(delete_index)), '\n']);

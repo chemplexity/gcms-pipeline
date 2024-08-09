@@ -37,7 +37,12 @@ for i=1:length(data(sampleRow).peaks)
     db(i).peak_mz = mz;
     db(i).peak_intens = intensity;
 
-    %data.peaks.mz, data.peaks.intensity
+    % isfield(data(i).peaks, 'match_score')
+    %    db(i).match_score = score
+    % else
+    %    db(i).match_score = 0
+    % end
+
 
 end
 

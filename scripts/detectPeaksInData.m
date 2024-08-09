@@ -53,6 +53,11 @@ for i = 1:length(data)
         peak.mz = data(i).channel(2:end);
         peak.intensity = data(i).intensity(timeIndex, 2:end);
 
+        % Apply baseline correction to peak intensity
+        if isfield(data, 'baseline')
+            peak.intensity = peak.intensity - data(i).baseline(timeIndex, 2:end);
+        end
+        
         % Normalize peak intensity and filter by minimum intensity
         peak.intensity = Normalize(peak.intensity);
         peakFilter = peak.intensity >= minIntensity;
@@ -64,6 +69,32 @@ for i = 1:length(data)
         peakList = [peakList, peak];
     end
 
+    % Filter unique peaks again
+    removeIndex = [];
+    skipIndex = [];
+
+    for j = 1:length(peakList)
+        
+        if any(skipIndex == j)
+            continue
+        end
+
+        matches = [peakList.time] == peakList(j).time;
+
+        % Keep lowest error peak among duplicates
+        if sum(matches) > 1
+            matchIndex = find(matches == 1);
+            skipIndex = [skipIndex, matchIndex];
+
+            keepIndex = find([peakList(matchIndex).error] == min(peakList(matchIndex).error));
+            keepIndex = keepIndex(1);
+
+            matchIndex(keepIndex) = [];
+            removeIndex = [removeIndex, matchIndex];
+        end
+    end
+
+    peakList(removeIndex) = [];
+
     data(i).peaks = peakList;
-    
 end
