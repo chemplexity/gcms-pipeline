@@ -37,6 +37,8 @@ for i=1:length(data(sampleRow).peaks)
     db(i).peak_mz = mz;
     db(i).peak_intens = intensity;
 
+    %data.peaks.mz, data.peaks.intensity
+
 end
 
 data(sampleRow).peaks = db;
