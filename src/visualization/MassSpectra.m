@@ -92,7 +92,7 @@
 % ------------------------------------------------------------------------
 %   MassSpectra(mz, y)
 %   MassSpectra(mz, y, 'labels', 'off', 'scale', 'full')
-%   MassSpectra(mz, y 'export', {'MyFigure01', '-dtiff', '-r300'})
+%   MassSpectra(mz, y, 'export', {'MyFigure01', '-dtiff', '-r300'})
 %
 
 function varargout = MassSpectra(varargin)
@@ -866,7 +866,7 @@ idx = 1;
 
 % Fill in resampled arrays with zeros
 for i = minMz:mzStep:maxMz
-    
+   
     if idx > length(mz) || i < mz(idx)
         mz0(end+1) = i;
         y0(end+1) = 0;
