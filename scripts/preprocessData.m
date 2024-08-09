@@ -1,4 +1,4 @@
-function data = preprocessData(data, timeStart, timeEnd)
+function data = preprocessData(data, varargin)
 
 % ------------------------------------------------------------------------
 % Method      : preprocessData
@@ -7,26 +7,47 @@ function data = preprocessData(data, timeStart, timeEnd)
 % baseline
 % ------------------------------------------------------------------------
 
-% Defaults will be empty
-% options.time_start = []
-% options.time_end = []
+% ---------------------------------------
+% Defaults
+% ---------------------------------------
+default.time_start = [];
+default.time_end = [];
+default.baseline_smoothness = 1E7;
+default.baseline_asymmetry = 1E-4;
 
-% baseline smoothness, default = 1E7
-% baseline asymmetry, default = 1E-4
+% ---------------------------------------
+% Input
+% ---------------------------------------
+p = inputParser;
 
-baselineSmoothness = 1E7;
-baselineAsymmetry = 1E-4;
+addOptional(p, 'timeStart', default.time_start);
+addOptional(p, 'timeEnd', default.time_end)
+addOptional(p, 'baselineSmoothness', default.baseline_smoothness);
+addOptional(p, 'baselineAsymmetry', default.baseline_asymmetry);
 
+parse(p, varargin{:});
+
+% ---------------------------------------
+% Parse
+% ---------------------------------------
+options.timeStart = p.Results.timeStart;
+options.timeEnd = p.Results.timeEnd;
+options.baselineSmoothness = p.Results.baselineSmoothness;
+options.baselineAsymmetry = p.Results.baselineAsymmetry;
+
+% ---------------------------------------
+% Preprocessing
+% ---------------------------------------
 for i = 1:size(data, 1)
-    
-    % Crop signal by start and end time
 
-    % if isempty(options.time_start)
-    %   timeStart = data(i).time(1) - 1
+    if isempty(options.timeStart)
+        timeStart = data(i).time(1) - 1;
+    end
 
-    % if isempty(options.time_end)
-    %   timeEnd = data(i).time(end) + 1
-
+    if isempty(options.timeEnd)
+        timeEnd = data(i).time(end) + 1;
+    end
+   
     data(i) = cropDataByTimeRange(data(i), timeStart, timeEnd);
 
     % Apply centroid algorithm to channel and intensity data
@@ -37,8 +58,7 @@ for i = 1:size(data, 1)
     data(i).intensity = [data(i).intensity(:, 1), centroidedIntensity];
 
     % Calculate the baseline
-    data(i).baseline = Baseline(data(i).intensity, 'smoothness', baselineSmoothness, 'asymmetry', baselineAsymmetry);
+    data(i).baseline = Baseline(data(i).intensity, 'smoothness', ...
+        options.baselineSmoothness, 'asymmetry', options.baselineAsymmetry);
     
-end
-
 end

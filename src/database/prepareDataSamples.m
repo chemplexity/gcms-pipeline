@@ -10,7 +10,7 @@ function db = prepareDataSamples(data)
 db = [];
 data = addChecksum(data);
 
-for i = 1:length(data)
+for i=1:length(data)
     
     db(i).file_path = data(i).file_path;
     db(i).file_name = data(i).file_name;
