@@ -35,30 +35,77 @@ options.timeEnd = p.Results.timeEnd;
 options.baselineSmoothness = p.Results.baselineSmoothness;
 options.baselineAsymmetry = p.Results.baselineAsymmetry;
 
-% ---------------------------------------
+% -----------------------------------------
+% Status
+% -----------------------------------------
+fprintf(['\n', repmat('-',1,50), '\n']);
+fprintf(' PREPROCESSING DATA');
+fprintf(['\n', repmat('-',1,50), '\n\n']);
+
+fprintf([' STATUS  Preprocessing ', num2str(length(data)), ' files...', '\n\n']);
+
+% -----------------------------------------
 % Preprocessing
-% ---------------------------------------
-for i = 1:size(data, 1)
+% -----------------------------------------
+for i = 1:size(data,1)
+
+    m = num2str(i);
+    n = num2str(size(data,1));
+    
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ' START\n']);
 
     if isempty(options.timeStart)
         timeStart = data(i).time(1) - 1;
+    else
+        timeStart = options.timeStart;
     end
 
     if isempty(options.timeEnd)
         timeEnd = data(i).time(end) + 1;
+    else
+        timeEnd = options.timeEnd;
     end
    
+    % -----------------------------------------
+    % Crop signals by time
+    % -----------------------------------------
     data(i) = cropDataByTimeRange(data(i), timeStart, timeEnd);
 
-    % Apply centroid algorithm to channel and intensity data
+    % -----------------------------------------
+    % Centroid mass spectra
+    % -----------------------------------------
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ' centroiding...']);
+    fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
+
     channelWithoutTic = data(i).channel(:, 2:end);
     intensityWithoutTic = data(i).intensity(:, 2:end);
+
     [centroidedChannel, centroidedIntensity] = Centroid(channelWithoutTic, intensityWithoutTic);
+    
     data(i).channel = [data(i).channel(:, 1), centroidedChannel];
     data(i).intensity = [data(i).intensity(:, 1), centroidedIntensity];
 
-    % Calculate the baseline
-    data(i).baseline = Baseline(data(i).intensity, 'smoothness', ...
-        options.baselineSmoothness, 'asymmetry', options.baselineAsymmetry);
+    % -----------------------------------------
+    % Baseline correction on all chromatograms
+    % -----------------------------------------
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ' calculating baselines...']);
+    fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
+
+    data(i).baseline = Baseline(data(i).intensity, ...
+        'smoothness', options.baselineSmoothness, ...
+        'asymmetry', options.baselineAsymmetry);
+
+    % -----------------------------------------
+    % Status
+    % -----------------------------------------
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ' END\n']);
     
 end
+
+fprintf(['\n', repmat('-',1,50), '\n']);
+fprintf(' EXIT');
+fprintf(['\n', repmat('-',1,50), '\n']);

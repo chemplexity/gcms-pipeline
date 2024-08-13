@@ -32,7 +32,7 @@ function data = ImportAgilent(varargin)
 %   data = ImportAgilent('file', '00159F.D')
 %   data = ImportAgilent('file', {'/Data/2016/04/', '00201B.D'})
 %   data = ImportAgilent('file', {'/Data/2016/'}, 'depth', 4)
-%   data = ImportAgilent('content', 'metadata', 'depth', 8)
+%   data = ImportAgilent('content', 'header', 'depth', 8)
 %   data = ImportAgilent('verbose', 'off')
 
 % ---------------------------------------
