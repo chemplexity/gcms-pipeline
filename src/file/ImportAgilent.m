@@ -259,7 +259,7 @@ for i = 1:length(file)
         case {'all', 'default'}
             
             data(i,1) = parseinfo(f, data(i,1));
-            data(i,1) = parsedata(f, data(i,1));
+            data(i,1) = parsedata(f, data(i,1), option);
             
         case {'metadata', 'header'}
             
@@ -297,6 +297,9 @@ switch varargin{2}
         
     case 'file_count'
         fprintf([' STATUS  Importing ', num2str(varargin{3}), ' files...', '\n\n']);
+
+    case 'file_error_incomplete'
+        fprintf([' STATUS  File is incomplete, unable to import data...', '\n']);
         
     case 'file_name'
         fprintf(' %s', varargin{3});
@@ -464,13 +467,13 @@ end
 function str = parsebytes(x)
 
 if x > 1E9
-    str = [num2str(x/1E9, '%.1f'), ' GB'];
+    str = [num2str(x/(1024*1024*1024), '%.1f'), ' GB'];
 elseif x > 1E6
-    str = [num2str(x/1E6, '%.1f'), ' MB'];
+    str = [num2str(x/(1024*1024), '%.1f'), ' MB'];
 elseif x > 1E3
-    str = [num2str(x/1E3, '%.1f'), ' KB'];
+    str = [num2str(x/1024, '%.1f'), ' KB'];
 else
-    str = [num2str(x/1E3, '%.3f'), ' KB'];
+    str = [num2str(x/1024, '%.3f'), ' KB'];
 end
 
 end
@@ -675,7 +678,7 @@ end
 % ---------------------------------------
 % File data
 % ---------------------------------------
-function data = parsedata(f, data)
+function data = parsedata(f, data, option)
 
 if isempty(data.file_version)
     return
@@ -686,6 +689,11 @@ switch data.file_version
     
     case {'2'}
         
+        if data.dir_offset >= data.file_size
+            status(option.verbose, 'file_error_incomplete');
+            return
+        end
+
         x = fdirectory(f, data.dir_offset, data.num_records);
         
         data.data_offset = x.spectrum_offset;
@@ -703,8 +711,8 @@ switch data.file_version
         
     case {'8', '30', '130'}
         
-        data.intensity  = fdelta(f, data.data_offset);
-        data.time       = ftime(data.start_time, data.end_time, numel(data.intensity));
+        data.intensity = fdelta(f, data.data_offset);
+        data.time      = ftime(data.start_time, data.end_time, numel(data.intensity));
         
     case {'81', '181'}
         
