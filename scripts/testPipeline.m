@@ -77,7 +77,7 @@ jdx = 1;
 
 plotMassSpectraMatch(data, idx, jdx);
 
-%% Plot mass spectra of matches (increment) 
+%% Plot mass spectra of matches (manual increment) 
 jdx = jdx + 1;
 
 if jdx > length(data(idx).peaks)
@@ -89,4 +89,31 @@ if idx > length(data)
     idx = 1;
 end
 
-plotMassSpectraMatch(data, idx, jdx);
+if isempty(data(idx).peaks(jdx).library_match)
+    fprintf(['[ERROR] No match at sample index: ', num2str(idx), ', peak index: ', num2str(jdx), '\n']);
+end
+
+plotMassSpectraMatch(data, idx, jdx, 50);
+
+%% Plot mass spectra of matches (auto) 
+while true
+    jdx = jdx + 1;
+    
+    if jdx > length(data(idx).peaks)
+        jdx = 1;
+        idx = idx + 1;
+    end
+    
+    if idx > length(data)
+        idx = 1;
+    end
+    
+    if isempty(data(idx).peaks(jdx).library_match)
+        fprintf(['[ERROR] No match at sample index: ', num2str(idx), ', peak index: ', num2str(jdx), '\n']);
+        continue;
+    end
+
+    plotMassSpectraMatch(data, idx, jdx, 50);
+
+    pause(2);
+end
