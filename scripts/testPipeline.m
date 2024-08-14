@@ -20,6 +20,11 @@ removeNames = {'dcm', 'blank'};
 
 % Remove DCM and Blanks
 for i = 1:length(data)
+    if isempty(data(i).sample_name)
+        [~, sampleName, ~] = fileparts(fileparts(data(i).file_name));
+        data(i).sample_name = sampleName;
+    end
+
     for j = 1:length(removeNames)
         if contains(lower(data(i).sample_name), removeNames{j})
             removeIndex(end+1) = i;
@@ -29,9 +34,6 @@ for i = 1:length(data)
 end
 
 data(removeIndex) = [];
-
-%% Add file checksum
-data = addChecksum(data);
 
 %% Plot TIC data (initialize)
 idx = 1;
@@ -133,6 +135,31 @@ while true
     end
 
     plotMassSpectraMatch(data, idx, jdx, 50);
-
     pause(2);
+end
+
+%% Plot chromatogram with library match labels (initialize)
+idx = 1;
+
+plotChromatogramWithLibraryMatches(data, idx);
+
+%% Plot mass spectra of matches (manual increment) 
+idx = idx + 1;
+
+if idx > length(data)
+    idx = 1;
+end
+
+plotChromatogramWithLibraryMatches(data, idx);
+
+%% Plot mass spectra of matches (auto) 
+while true
+    idx = idx + 1;
+    
+    if idx > length(data)
+        idx = 1;
+    end
+    
+    plotChromatogramWithLibraryMatches(data, idx);
+    pause(3);
 end

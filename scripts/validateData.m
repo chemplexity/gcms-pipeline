@@ -71,13 +71,20 @@ for i = 1:size(data,1)
     end
 
     % -----------------------------------------
-    % Check if channel data is non-empty
+    % Check if channel data is empty
     % -----------------------------------------
     if isempty(data(i).channel)
         fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
         fprintf([' ', seqName, '/', fileBase, ': invalid file (channel data is missing)\n']);
         removeIndex(end+1) = i;
         continue
+    end
+
+    % -----------------------------------------
+    % Check if sample name is empty
+    % -----------------------------------------
+    if isempty(data(i).sample_name)
+        [~, data(i).sample_name, ~] = fileparts(fileparts(data(i).file_name));
     end
 
     % -----------------------------------------

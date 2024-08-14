@@ -10,6 +10,19 @@ options.ticks.size = [0.007, 0.0075];
 options.line.color = [0.22,0.22,0.22];
 options.line.width = 1.25;
 
+% Get axes limits
+xminPlot = min([data(sampleIndex).peaks.time]);
+xmaxPlot = max([data(sampleIndex).peaks.time]);
+yminPlot = min(data(sampleIndex).intensity(:,1));
+ymaxPlot = max(data(sampleIndex).intensity(:,1));
+
+xpadPlot = (xmaxPlot-xminPlot) * 0.025;
+ypadPlot = (ymaxPlot-yminPlot) * 0.025;
+
+if xpadPlot == 0
+    xpadPlot = 2;
+end
+
 % Initialize plots
 clf;
 
@@ -81,7 +94,7 @@ for i = 1:length(peaks)
             'parent', options.axes_plot, ...
             'color', 'red', ...
             'markersize', 5);
-        
+
         compoundName = strsplit(peaks(i).library_match(1).compound_name, ';');
         compoundName = upper(compoundName{1});
         
@@ -104,6 +117,11 @@ for i = 1:length(peaks)
             'fontsize', 6);
 
         peakLabel.Rotation = 90;
+
+        % Check if text is outside axes
+        if peakLabel.Extent(2) + peakLabel.Extent(4) > ymaxPlot + ypadPlot
+            ymaxPlot = peakLabel.Extent(2) + peakLabel.Extent(4);
+        end
     end
 end
 
@@ -116,17 +134,7 @@ xlabel('Time (min)', 'parent', options.axes_plot);
 ylabel('Intensity', 'parent', options.axes_plot);
 
 % Axes limits
-xmin = min([data(sampleIndex).peaks.time]);
-xmax = max([data(sampleIndex).peaks.time]);
-ymin = min(data(sampleIndex).intensity(:,1));
-ymax = max(data(sampleIndex).intensity(:,1));
-
-xpad = (xmax-xmin) * 0.025;
-ypad = (ymax-ymin) * 0.075;
-
-set(options.axes_plot, 'xlim', [xmin-xpad, xmax+xpad]);
-set(options.axes_plot, 'ylim', [ymin-ypad, ymax+ypad]);
-
-fprintf([num2str(ymax+ypad),'\n']);
+set(options.axes_plot, 'xlim', [xminPlot-xpadPlot, xmaxPlot+xpadPlot]);
+set(options.axes_plot, 'ylim', [yminPlot-ypadPlot, ymaxPlot+ypadPlot]);
 
 end

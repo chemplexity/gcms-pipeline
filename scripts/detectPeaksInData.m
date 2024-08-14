@@ -10,11 +10,12 @@ function data = detectPeaksInData(data, varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.maxError = 50;
-default.minPeakHeight = 1E4;
+default.maxError        = 50;
+default.minPeakHeight   = 1E4;
+default.minPeakWidth    = 0.01;
 default.minIonIntensity = 0.02;
-default.startIndex = 1;
-default.endIndex = length(data);
+default.startIndex      = 1;
+default.endIndex        = length(data);
 
 % ---------------------------------------
 % Input
@@ -23,6 +24,7 @@ p = inputParser;
 
 addOptional(p, 'maxError', default.maxError);
 addOptional(p, 'minPeakHeight', default.minPeakHeight)
+addOptional(p, 'minPeakWidth', default.minPeakWidth)
 addOptional(p, 'minIonIntensity', default.minIonIntensity);
 addOptional(p, 'startIndex', default.startIndex);
 addOptional(p, 'endIndex', default.endIndex);
@@ -32,11 +34,12 @@ parse(p, varargin{:});
 % ---------------------------------------
 % Parse
 % ---------------------------------------
-options.maxError = p.Results.maxError;
-options.minPeakHeight = p.Results.minPeakHeight;
+options.maxError        = p.Results.maxError;
+options.minPeakHeight   = p.Results.minPeakHeight;
+options.minPeakWidth    = p.Results.minPeakWidth;
 options.minIonIntensity = p.Results.minIonIntensity;
-options.startIndex = p.Results.startIndex;
-options.endIndex = p.Results.endIndex;
+options.startIndex      = p.Results.startIndex;
+options.endIndex        = p.Results.endIndex;
 
 % ---------------------------------------
 % Validate
@@ -45,6 +48,11 @@ options.endIndex = p.Results.endIndex;
 % Parameter: 'minIonIntensity'
 if options.minIonIntensity > 1
     options.minIonIntensity = options.minIonIntensity / 100;
+end
+
+% Parameter: 'minPeakWidth'
+if options.minPeakWidth < 0
+    options.minPeakWidth = default.minPeakWidth;
 end
 
 % Parameter: 'startIndex'
@@ -135,7 +143,17 @@ for i = options.startIndex:options.endIndex
 
         % Filter by peak height
         if peak.height < options.minPeakHeight
-            continue;
+            continue
+        end
+
+        % Filter by peak width
+        if peak.width < options.minPeakWidth
+            continue
+        end
+
+        % Filter if peak time is outside range
+        if peak.time <= peak.xmin || peak.time >= peak.xmax
+            continue
         end
         
         peak.peakCenterX = peakLocations(j, 1);
