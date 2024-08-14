@@ -34,5 +34,10 @@ peaksText = strjoin(peaksTextArray);
 sqlquery = peaksText;
 execute(conn, sqlquery);
 
+libraryTextArray = readlines('./src/database/tables/library_table_sql.txt');
+libraryText = strjoin(libraryTextArray);
+sqlquery = libraryText;
+execute(conn, sqlquery);
+
 close(conn)
 fprintf("Database created: " + p.Results.filename + "\n");

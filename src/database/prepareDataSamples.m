@@ -45,6 +45,8 @@ for i=1:length(data)
     db(i).channel_units    = data(i).channel_units;
     db(i).sampling_rate    = data(i).sampling_rate;
     db(i).sample_datetime  = data(i).datetime;
+    db(i).sample_info      = '';
+    db(i).injvol           = 0;
     db(i).date_created     = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
 
 end

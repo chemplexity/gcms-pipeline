@@ -31,17 +31,28 @@ for i=1:length(data(sampleRow).peaks)
     
     indexOfPeakTime = lookupTimeIndex(data(sampleRow).time, ...
         data(sampleRow).peaks(i).time);
-    
-    [mz, intensity] = convertSpectraToText(data(sampleRow).channel(1, 2:end), ...
-        data(sampleRow).intensity(indexOfPeakTime, 2:end));
+
+    mz = convertDoubleArrayToText(data(sampleRow).channel(1, 2:end), '%.4f');
+    intensity = convertDoubleArrayToText(data(sampleRow).intensity ...
+        (indexOfPeakTime, 2:end),'%.0f' );
+
     db(i).peak_mz = mz;
-    db(i).peak_intens = intensity;
+    db(i).peak_intensity = intensity;
 
     if isfield(data(sampleRow).peaks(i), 'match_score')
         db(i).match_score = data(sampleRow).peaks(i).match_score;
     else
         db(i).match_score = 0;
     end
+
+    % confirm 6 decimal places
+    db(i).fit_x = convertDoubleArrayToText(data(sampleRow). ...
+        peaks(i).fit(:, 1), '%.6f');
+    db(i).fit_y = convertDoubleArrayToText(data(sampleRow). ...
+        peaks(i).fit(:, 2), '%.6f');
+
+    % change this later
+    db(i).library_id = 0;
 
 end
 

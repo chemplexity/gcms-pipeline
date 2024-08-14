@@ -115,7 +115,7 @@ assert(abs(startTime - actStartTime) < 1E-15);
 assert(abs(endTime - actEndTime) < 1E-15);
 assert(isfield(processedData, 'baseline'));
 
-%% convertSpectraToText (3 tests)
+%% convertDoubleArrayToText (3 tests)
 
 % Test case 1
 chanArray = [0, 14.9000000000000, 15, 15.1000000000000, 15.2000000000000, 15.3000000000000];
@@ -124,7 +124,8 @@ intArray = [676507, 0, 0, 0, 0, 0, 0, 0, 0];
 expChanString = '0.0000, 14.9000, 15.0000, 15.1000, 15.2000, 15.3000';
 expIntString = '676507, 0, 0, 0, 0, 0, 0, 0, 0';
 
-[actChanString, actIntString] = convertSpectraToText(chanArray, intArray);
+actChanString = convertDoubleArrayToText(chanArray, '%.4f');
+actIntString = convertDoubleArrayToText(intArray, '%.0f');
 
 assert(strcmp(expChanString, actChanString));
 assert(strcmp(expIntString, actIntString));
@@ -136,7 +137,8 @@ intArray = [0, 0, 0, 13, 0, 0];
 expChanString = '1.0000, 2.0000, 3.3333, 4.4444';
 expIntString = '0, 0, 0, 13, 0, 0';
 
-[actChanString, actIntString] = convertSpectraToText(chanArray, intArray);
+actChanString = convertDoubleArrayToText(chanArray, '%.4f');
+actIntString = convertDoubleArrayToText(intArray, '%.0f');
 
 assert(strcmp(expChanString, actChanString));
 assert(strcmp(expIntString, actIntString));
@@ -148,7 +150,82 @@ intArray = [666362, 0, 0, 4, 0, 0, 4];
 expChanString = '0.0000, 10.0000, 10.1000, 10.2000, 10.3000, 10.4000';
 expIntString = '666362, 0, 0, 4, 0, 0, 4';
 
-[actChanString, actIntString] = convertSpectraToText(chanArray, intArray);
+actChanString = convertDoubleArrayToText(chanArray, '%.4f');
+actIntString = convertDoubleArrayToText(intArray, '%.0f');
 
 assert(strcmp(expChanString, actChanString));
 assert(strcmp(expIntString, actIntString));
+
+%% loadPeaksFromDatabase
+
+% Test case 1
+delete './src/database/GCMS_Database.db'
+runPipeline('./src/database/GCMS_Database.db', 'fileName', ...
+    './examples/data/Ketones Mix 100ngmL.D');
+peaksTable = loadPeaksFromDatabase('./src/database/GCMS_Database.db');
+
+assert(length(fieldnames(peaksTable)) == 47);
+assert(length(peaksTable) == 40);
+
+% Test case 2
+runPipeline('./src/database/GCMS_Database.db', 'fileName', ...
+    './examples/data/Ketones_Aldehydes_Mix 100 ngmL.D');
+peaksTable = loadPeaksFromDatabase('./src/database/GCMS_Database.db');
+
+assert(length(fieldnames(peaksTable)) == 47);
+assert(length(peaksTable) == 89);
+
+%% detectPeaksInData
+
+% Test case 1
+data = ImportAgilent('file', './examples/data/FAME Mix.D');
+data = detectPeaksInData(data);
+peaks = data(1).peaks;
+
+assert(isfield(data, 'peaks'));
+assert(length(fieldnames(peaks)) == 18);
+
+% Test case 2
+data = ImportAgilent('file', ...
+    './examples/data/Ketones_Aldehydes_Mix 100 ngmL.D');
+data = detectPeaksInData(data);
+peaks = data(1).peaks;
+
+assert(isfield(data, 'peaks'));
+assert(length(fieldnames(peaks)) == 18);
+
+% Test case 2
+data = ImportAgilent('file', ...
+     './examples/data/Ketones Mix 100ngmL.D');
+data = detectPeaksInData(data);
+peaks = data(1).peaks;
+
+assert(isfield(data, 'peaks'));
+assert(length(fieldnames(peaks)) == 18);
+
+%% concatenateTrainingData
+
+% Test case 1 
+load('trainingdata-20170210-2350.mat');
+[input, output] = concatenateTrainingData(TRAINING2);
+
+assert(length(input) == length(output));
+assert(size(output, 2) == 2);
+
+%% addChecksum
+
+% Test case 1
+data = ImportAgilent('file', './examples/data/FAME Mix.D');
+data = addChecksum(data);
+assert(isfield(data, 'checksum'));
+
+% Test case 2
+data = ImportAgilent('file', ...
+    './examples/data/Ketones_Aldehydes_Mix 100 ngmL.D');
+data = addChecksum(data);
+assert(isfield(data, 'checksum'));
+
+% Test case 3
+data = ImportAgilent('file', './examples/data/Ketones Mix 100ngmL.D');
+data = addChecksum(data);
+assert(isfield(data, 'checksum'));

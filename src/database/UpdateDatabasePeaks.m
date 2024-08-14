@@ -17,7 +17,6 @@ end
 table = 'peaks';
 field = 'peak_time';
 index = [];
-inputDups = [];
 
 if ~skipDuplicateCheck
     
@@ -35,7 +34,7 @@ if ~skipDuplicateCheck
         query = [sprintf('%s', ...
             'SELECT COUNT(*)', ...
             'FROM ', table, ' ', ...
-            'WHERE ', field, '=', char(peaksData(i).(field)), '')];
+            'WHERE ', field, '=''', char(peaksData(i).(field)), '''')];
         
         if isempty(peaksData(i).(field))
             data{1} = 1;
@@ -53,17 +52,16 @@ if ~skipDuplicateCheck
             if j > length(peaksData)
                 break   
             elseif i~=j && strcmp(peaksData(i).(field), peaksData(j).(field))
-                inputDups(end+1) = j;
+                index(end+1) = j;
                 fprintf('[DUPLICATE IN INPUT DATA] ')
                 fprintf(['peak row: ' num2str(j), '\n']);
-                peaksData(j) = [];
             end
         end 
     end
     
     if ~isempty(index)
         peaksData(index) = [];
-        fprintf(['[IGNORE] ' num2str(length(index) + length(inputDups)), '\n']);
+        fprintf(['[IGNORE] ' num2str(length(index)), '\n']);
     else
         fprintf('[OK] \n');
     end

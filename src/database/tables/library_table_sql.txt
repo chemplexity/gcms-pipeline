@@ -1,4 +1,4 @@
-create table peaks
+create table library
 (
     library_id                  integer not null
         constraint library_id

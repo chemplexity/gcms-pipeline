@@ -1,4 +1,4 @@
-function data = runPipeline(timeStart, timeEnd, db)
+function data = runPipeline(db, varargin)
 
 % ------------------------------------------------------------------------
 % Method      : runPipeline()
@@ -9,9 +9,42 @@ function data = runPipeline(timeStart, timeEnd, db)
 % peaks tables in the database
 % ------------------------------------------------------------------------
 
-data = ImportAgilent();
+% ---------------------------------------
+% Defaults
+% ---------------------------------------
+default.fileName = [];
+default.timeStart = [];
+default.timeEnd = [];
+
+% ---------------------------------------
+% Input
+% ---------------------------------------
+p = inputParser;
+
+addOptional(p, 'fileName', default.fileName);
+addOptional(p, 'timeStart', default.timeStart);
+addOptional(p, 'timeEnd', default.timeEnd);
+
+parse(p, varargin{:});
+
+% ---------------------------------------
+% Parse
+% ---------------------------------------
+options.fileName = p.Results.fileName;
+options.timeStart = p.Results.timeStart;
+options.timeEnd = p.Results.timeEnd;
+
+% -----------------------------------------
+% Run Pipeline
+% -----------------------------------------
+if isempty(options.fileName)
+    data = ImportAgilent();
+else
+    data = ImportAgilent('file', options.fileName);
+end
+
 CreateDatabase('filename', db);
-data = preprocessData(data(1), timeStart, timeEnd);
+data = preprocessData(data, options.timeStart, options.timeEnd);
 data = detectPeaksInData(data);
 
 preppedDataSamples = prepareDataSamples(data);

@@ -119,3 +119,28 @@ preppedData = prepareDataPeaks(db, data, 1);
 result = UpdateDatabasePeaks('./src/database/GCMS_Database.db', ...
     preppedData);
 assert(strcmp(result, 'added peaks: 157'));
+
+%% PrepareDataLibrary
+
+% Test case 1
+library = ImportNIST('file', ...
+    './examples/library/GCMS DB-Public-KovatsRI-VS3.msp');
+preppedLibrary = prepareDataLibrary(library);
+
+assert(length(fieldnames(preppedLibrary)) == 22);
+assert(ischar(preppedLibrary(1).mz));
+assert(ischar(preppedLibrary(1).intensity));
+
+%% UpdateDatabaseLibrary
+
+% Test case 1
+db = './src/database/GCMS_Database.db';
+delete(db);
+CreateDatabase();
+
+library = ImportNIST('file', ...
+    './examples/library/GCMS DB-Public-KovatsRI-VS3.msp');
+preppedLibrary = prepareDataLibrary(library(1:100));
+result = UpdateDatabaseLibrary(db, preppedLibrary);
+
+% assert(strcmp(result, 'added compounds: 100'));

@@ -18,7 +18,6 @@ end
 table = 'samples';
 field = 'md5_checksum';
 index = [];
-inputDups = [];
 
 if ~skipDuplicateCheck
     
@@ -52,17 +51,16 @@ if ~skipDuplicateCheck
            
         for j = 1:length(samplesData)
             if i~=j && strcmp(samplesData(i).(field), samplesData(j).(field))
-                inputDups(end+1) = j;
+                index(end+1) = j;
                 fprintf('[DUPLICATE IN INPUT DATA] ')
                 disp(samplesData(j).file_path);
-                samplesData(j) = [];
             end
         end 
     end
     
     if ~isempty(index)
         samplesData(index) = [];
-        fprintf(['[IGNORE] ' num2str(length(index) + length(inputDups)), '\n']);
+        fprintf(['[IGNORE] ' num2str(length(index)), '\n']);
     else
         fprintf('[OK] \n');
     end

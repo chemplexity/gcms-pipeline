@@ -18,7 +18,8 @@ for i=1:length(data)
     db(i).compound_formula = data(i).compound_formula;
     db(i).compound_mw = data(i).compound_mw;
     db(i).compound_exact_mass = data(i).compound_exact_mass;
-    db(i).compound_retention_time = data(i).compound_retention_time;
+    db(i).compound_retention_time = sprintf('%.6f', ...
+        data(i).compound_retention_time);
     db(i).compound_retention_index = data(i).compound_retention_index;
     db(i).cas_id = data(i).cas_id;
     db(i).nist_id = data(i).nist_id;
@@ -29,12 +30,20 @@ for i=1:length(data)
     db(i).collision_energy = data(i).collision_energy;
     db(i).comments = data(i).comments;
     db(i).num_peaks = data(i).num_peaks;
-
-    % should be 2:end?
-    [mz, intensity] = convertSpectraToText(data(i).mz, data(i).intensity)
-
-    db(i).mz = mz;
-    db(i).intensity = intensity;
     db(i).date_created = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
+
+    if data(i).mz(1)==0
+
+        db(i).mz = convertDoubleArraytoText(data(i).mz(2:end), '%.4f');
+        db(i).intensity = convertDoubleArrayToText(data(i).intensity ...
+            (2:end), '%.0f');
+
+    else 
+
+        db(i).mz = convertDoubleArrayToText(data(i).mz, '%.4f');
+        db(i).intensity = convertDoubleArrayToText(data(i).intensity, ...
+            '%.0f');
+
+    end
 
 end
