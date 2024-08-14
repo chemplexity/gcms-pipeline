@@ -208,7 +208,6 @@ fprintf([' STATUS  Total files : ', totalFiles, '\n']);
 fprintf([' STATUS  Total peaks : ', totalPeaks, '\n']);
 fprintf([' STATUS  Total time  : ', parsetime(totalTime), '\n']);
 
-
 fprintf([repmat('-',1,50), '\n']);
 fprintf(' EXIT');
 fprintf(['\n', repmat('-',1,50), '\n']);

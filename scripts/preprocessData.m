@@ -143,7 +143,10 @@ for i = options.startIndex:options.endIndex
     
 end
 
-fprintf([' STATUS  Total processing time : ', parsetime(totalProcessTime), '\n']);
+totalFiles = num2str(length(data(options.startIndex:options.endIndex)));
+
+fprintf([' STATUS  Total files : ', totalFiles, '\n']);
+fprintf([' STATUS  Total time  : ', parsetime(totalProcessTime), '\n']);
 
 fprintf([repmat('-',1,50), '\n']);
 fprintf(' EXIT');

@@ -240,7 +240,7 @@ for i = options.startIndex:options.endIndex
     end
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': END (processing time: ', parsetime(toc(matchTime)), ')\n\n']);
+    fprintf([' ', data(i).sample_name, ': END (', parsetime(toc(matchTime)), ')\n\n']);
 
 end
 

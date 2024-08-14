@@ -41,6 +41,16 @@ for i = 1:size(data,1)
     end
 
     % -----------------------------------------
+    % Check if file name is DATASIM.MS
+    % -----------------------------------------
+    if strcmpi(fileName, 'datasim')
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', seqName, '/', fileBase, ': invalid file (DATASIM.MS)\n']);
+        removeIndex(end+1) = i;
+        continue
+    end
+
+    % -----------------------------------------
     % Check if file name is SNAPSHOT.MS
     % -----------------------------------------
     if strcmpi(fileName, 'snapshot')
