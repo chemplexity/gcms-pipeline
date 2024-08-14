@@ -1,15 +1,25 @@
+%% Load library
+libraryFile = './examples/library/GCMS DB-Public-KovatsRI-VS3.msp';
+library = ImportNIST('file', libraryFile);
+
+%% Cleanup library
+library = CleanupLibrary(library, ...
+    'min_points', 5, ...
+    'min_mz', 50, ...
+    'max_mz', 600);
+
 %% Import data
 data = ImportAgilent();
 
 %% Validate data (remove non-MS files)
 data = validateData(data);
 
-%% Plot data (initialize)
+%% Plot TIC data (initialize)
 idx = 1;
 
 plot(data(idx).time, data(idx).intensity(:,1));
 
-%% Plot data (increment index)
+%% Plot TIC data (increment index)
 idx = idx + 1;
 
 if idx > length(data)
@@ -47,16 +57,6 @@ end
 
 plotPeaksInData(data, idx);
 
-%% Load library
-libraryFile = './examples/library/GCMS DB-Public-KovatsRI-VS3.msp';
-library = ImportNIST('file', libraryFile);
-
-%% Cleanup library
-library = CleanupLibrary(library, ...
-    'min_points', 5, ...
-    'min_mz', 50, ...
-    'max_mz', 600);
-
 %% Perform spectral matching
 startIndex = [];
 endIndex = [];
@@ -70,3 +70,23 @@ data = performSpectralMatch(data, library,...
 
 %% Convert all peaks data to user-friendly data structure
 peaksData = reformatPeaksData(data);
+
+%% Plot mass spectra of matches (initialize)
+idx = 1;
+jdx = 1;
+
+plotMassSpectraMatch(data, idx, jdx);
+
+%% Plot mass spectra of matches (increment) 
+jdx = jdx + 1;
+
+if jdx > length(data(idx).peaks)
+    jdx = 1;
+    idx = idx + 1;
+end
+
+if idx > length(data)
+    idx = 1;
+end
+
+plotMassSpectraMatch(data, idx, jdx);

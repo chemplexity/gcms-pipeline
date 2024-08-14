@@ -50,4 +50,6 @@ for i = 1:length(data(sampleIndex).peaks)
     end
 end
 
+title([num2str(sampleIndex), ' : ', data(sampleIndex).sample_name])
+
 end

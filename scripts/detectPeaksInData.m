@@ -52,7 +52,7 @@ if isempty(options.startIndex)
     options.startIndex = default.startIndex;
 end
 
-if options.startIndex < 0 || options.startIndex > length(data)
+if options.startIndex <= 0 || options.startIndex > length(data)
     options.startIndex = default.startIndex;
 end
 
@@ -61,7 +61,7 @@ if isempty(options.endIndex)
     options.endIndex = default.endIndex;
 end
 
-if options.endIndex < 0 || options.endIndex > length(data)
+if options.endIndex <= 0 || options.endIndex > length(data)
     options.endIndex = default.endIndex;
 end
 
