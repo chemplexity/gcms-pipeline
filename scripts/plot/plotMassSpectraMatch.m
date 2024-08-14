@@ -106,8 +106,10 @@ for i = 1:length(peaks)
     
         if peaks(i).time == peakTime
             faceColor = [0.00, 0.30, 0.53];
-        else
+        elseif isempty(peaks(i).library_match)
             faceColor = [0.93, 0.30, 0.30];
+        else
+            faceColor = [0.30, 0.90, 0.30];
         end
 
         fill(xArea, yArea, [0.00, 0.30, 0.53],...
