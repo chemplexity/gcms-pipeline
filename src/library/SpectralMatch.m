@@ -1,7 +1,7 @@
 function matches = SpectralMatch(varargin)
 % ------------------------------------------------------------------------
 % Method      : SpectralMatch
-% Description : Match a mass spectra against a library of mass spectra
+% Description : Match mass spectra against a library of mass spectra
 % ------------------------------------------------------------------------
 %
 % ------------------------------------------------------------------------
@@ -14,10 +14,10 @@ function matches = SpectralMatch(varargin)
 % Input (Required)
 % ------------------------------------------------------------------------
 %   mz -- mass values
-%       array
+%       array | cell array
 %
 %   intensity -- intensity values
-%       array
+%       array | cell array
 %
 %   library -- NIST formatted library (from ImportNIST function)
 %       struct
@@ -61,8 +61,8 @@ default.mz_step = 1;
 % ---------------------------------------
 p = inputParser;
 
-addRequired(p, 'mz', @ismatrix);
-addRequired(p, 'intensity', @ismatrix);
+addRequired(p, 'mz');
+addRequired(p, 'intensity');
 addRequired(p, 'library', @isstruct);
 
 addParameter(p, 'num_matches', default.num_matches);
@@ -96,10 +96,26 @@ if numel(mz) <= 0
     return
 end
 
+if ~iscell(mz)
+    mz = {mz};
+end
+
+if size(mz,2) ~= 1 && size(mz,1) == 1
+    mz = mz';
+end
+
 % Input: intensity
 if numel(intensity) <= 0
     fprintf('[ERROR] intensity is empty...\n');
     return
+end
+
+if ~iscell(intensity)
+    intensity = {intensity};
+end
+
+if size(intensity,2) ~= 1 && size(intensity,1) == 1
+    intensity = intensity';
 end
 
 if length(mz) ~= length(intensity)
@@ -210,81 +226,100 @@ library_intensity = bsxfun(@rdivide,...
 % ---------------------------------------
 % Filter user data by m/z
 % ---------------------------------------
-user_filter = mz >= min_mz & mz <= max_mz;
-mz = mz(user_filter);
-intensity = intensity(user_filter);
+for i = 1:length(mz)
+    user_filter = mz{i} >= min_mz & mz{i} <= max_mz;
+    mz{i} = mz{i}(user_filter);
+    intensity{i} = intensity{i}(user_filter);
+end
 
 % ---------------------------------------
 % Prepare user data
 % ---------------------------------------
-user_intensity = zeros(1, length(library_mz));
+user_intensity = zeros(length(mz), length(library_mz));
 
 % Bin user data by m/z
-for i = 1:length(mz(1,:))
-    
-    % Get index to transfer intensity value to
-    index = find(library_mz == round(mz(1,i)));
-    
-    % Sum intensity values if both are same m/z bin
-    user_intensity(1, index) = user_intensity(1, index) + intensity(1,i);
+for i = 1:length(mz)
+    for j = 1:length(mz{i}(1,:))
+        
+        % Get index to transfer intensity value to
+        index = find(library_mz == round(mz{i}(1,j)));
+        
+        % Sum intensity values if both are same m/z bin
+        user_intensity(i, index) = user_intensity(i, index) + intensity{i}(1,j);
+    end
 end
 
 % Normalize user intensity
-user_intensity = (user_intensity - min(user_intensity)) / (max(user_intensity) - min(user_intensity));
+minIntensity = min(user_intensity,[],2);
+maxIntensity = max(user_intensity,[],2);
+user_intensity = (user_intensity - minIntensity) ./ (maxIntensity - minIntensity);
 
 % ---------------------------------------
 % Perform spectral matching
 % ---------------------------------------
-spectral_match_1 = sum((user_intensity .* library_intensity) .^ 0.5, 2);
-spectral_match_2 = (sum(library_intensity, 2) .* sum(user_intensity)) .^ 0.5;
-spectral_match = spectral_match_1 ./ spectral_match_2 .* 100;
+spectral_match = zeros(size(library,1), size(mz,1));
+
+for i = 1:length(mz)
+    spectral_match_1 = sum((user_intensity(i,:) .* library_intensity) .^ 0.5, 2);
+    spectral_match_2 = (sum(library_intensity, 2) .* sum(user_intensity(i,:))) .^ 0.5;
+    spectral_match(:,i) = spectral_match_1 ./ spectral_match_2 .* 100;
+end
 
 % ---------------------------------------
 % Get top matches
 % ---------------------------------------
-top_match = sort(unique(spectral_match(spectral_match >= options.min_score)), 'descend');
-top_match_index = 1;
+matches = {};
 
-matches = fieldnames(library)';
-matches{end+1} = 'score';
-matches{2,1} = {};
-matches = struct(matches{:});
-
-if isempty(top_match)
-    return
-end
-
-% Populate output with top matches (w/ no duplicates)
-while length(matches) < options.num_matches
-    if top_match_index > length(top_match)
-        break
-    end
-
-    match_index = find(spectral_match == top_match(top_match_index));
+for i = 1:length(mz)
+    top_match = sort(unique(spectral_match(spectral_match(:,i) >= options.min_score, i)), 'descend');
+    top_match_index = 1;
     
-    % Check for duplicates
-    if isscalar(match_index)
-        match = library(match_index);
-        match.score = top_match(top_match_index);
-        matches(end+1) = match;
-    else
-        match_mz = unique(cell2mat({library(match_index).compound_exact_mass}));
+    peakMatches = fieldnames(library)';
+    peakMatches{end+1} = 'score';
+    peakMatches{2,1} = {};
+    peakMatches = struct(peakMatches{:});
+    
+    if isempty(top_match)
+        matches{end+1,1} = [];
+        continue
+    end
+    
+    % Populate output with top matches (w/ no duplicates)
+    while length(peakMatches) < options.num_matches
+        if top_match_index > length(top_match)
+            break
+        end
+    
+        match_index = find(spectral_match(:,i) == top_match(top_match_index));
         
-        for i = 1:length(match_index)
-            match = library(match_index(i));
+        % Check for duplicates
+        if isscalar(match_index)
+            match = library(match_index);
             match.score = top_match(top_match_index);
-
-            if any(match.compound_exact_mass == match_mz)
-                matches(end+1) = match;
-                match_mz(match_mz == match.compound_exact_mass) = [];
-            end
-
-            if isempty(match_mz) 
-                break
+            peakMatches(end+1) = match;
+        else
+            match_mz = unique(cell2mat({library(match_index).compound_exact_mass}));
+            
+            for j = 1:length(match_index)
+                match = library(match_index(j));
+                match.score = top_match(top_match_index);
+    
+                if any(match.compound_exact_mass == match_mz)
+                    peakMatches(end+1) = match;
+                    match_mz(match_mz == match.compound_exact_mass) = [];
+                end
+    
+                if isempty(match_mz) 
+                    break
+                end
             end
         end
+        
+        top_match_index = top_match_index + 1;
     end
-    
-    top_match_index = top_match_index + 1;
+
+    matches{end+1,1} = peakMatches;
+
 end
 
+end

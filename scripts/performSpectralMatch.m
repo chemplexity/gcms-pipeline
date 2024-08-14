@@ -1,4 +1,4 @@
-function peaks = performSpectralMatch(varargin)
+function data = performSpectralMatch(data, library, varargin)
 % ------------------------------------------------------------------------
 % Method      : performSpectralMatch
 % Description : Match peak mass spectra against library spectra
@@ -7,13 +7,13 @@ function peaks = performSpectralMatch(varargin)
 % ------------------------------------------------------------------------
 % Syntax
 % ------------------------------------------------------------------------
-%   peaks = performSpectralMatch(peaks, library)
-%   peaks = performSpectralMatch( __ , Name, Value)
+%   data = performSpectralMatch(data, library)
+%   data = performSpectralMatch( __ , Name, Value)
 %
 % ------------------------------------------------------------------------
 % Input (Required)
 % ------------------------------------------------------------------------
-%   peaks -- peaks data
+%   data -- data with peaks field
 %       struct
 %
 %   library -- NIST formatted library (from ImportNIST function)
@@ -22,75 +22,92 @@ function peaks = performSpectralMatch(varargin)
 % ------------------------------------------------------------------------
 % Input (Name, Value)
 % ------------------------------------------------------------------------
-%   'min_score' -- minimum required match score (0 to 100)
+%   'minScore' -- minimum required match score (0 to 100)
 %       80 | number
 %
-%   'min_mz' -- minimum m/z to perform spectral matching
+%   'minMz' -- minimum m/z to perform spectral matching
 %       empty (default) | number
 %
-%   'max_mz' -- maximum m/z to perform spectral matching
+%   'maxMz' -- maximum m/z to perform spectral matching
 %       empty (default) | number
 %
-%   'mz_step' -- m/z resolution to perform spectral matching
+%   'mzStep' -- m/z resolution to perform spectral matching
 %       1 (default) | number
+%
+%   'startIndex' -- start index in data to process
+%       1 (default) | number
+%
+%   'endIndex' -- end index in data to process
+%       length(data) (default) | number
 %
 % ------------------------------------------------------------------------
 % Examples
 % ------------------------------------------------------------------------
-%   matches = SpectralMatch(mz, intensity, library)
-%   matches = SpectralMatch(mz, intensity, library, 'num_matches', 10)
-%   matches = SpectralMatch(mz, intensity, library, 'min_score', 90)
+%   data = SpectralMatch(data, library)
+%   data = SpectralMatch(data, library, 'min_score', 90)
 
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.min_score = 80;
-default.min_mz = [];
-default.max_mz = [];
-default.mz_step = 1;
+default.minScore = 80;
+default.minMz = [];
+default.maxMz = [];
+default.mzStep = 1;
+default.startIndex = 1;
+default.endIndex = length(data);
 
 % ---------------------------------------
 % Input
 % ---------------------------------------
 p = inputParser;
 
-addRequired(p, 'peaks', @isstruct);
-addRequired(p, 'library', @isstruct);
-
-addParameter(p, 'min_score', default.min_score);
-addParameter(p, 'min_mz', default.min_mz);
-addParameter(p, 'max_mz', default.max_mz);
-addParameter(p, 'mz_step', default.mz_step);
+addOptional(p, 'minScore', default.minScore);
+addOptional(p, 'minMz', default.minMz);
+addOptional(p, 'maxMz', default.maxMz);
+addOptional(p, 'mzStep', default.mzStep);
+addOptional(p, 'startIndex', default.startIndex);
+addOptional(p, 'endIndex', default.endIndex);
 
 parse(p, varargin{:});
 
 % ---------------------------------------
 % Parse
 % ---------------------------------------
-peaks   = p.Results.peaks;
-library = p.Results.library;
-
-options.min_score   = p.Results.min_score;
-options.min_mz      = p.Results.min_mz;
-options.max_mz      = p.Results.max_mz;
-options.mz_step     = p.Results.mz_step;
+options.minScore   = p.Results.minScore;
+options.minMz      = p.Results.minMz;
+options.maxMz      = p.Results.maxMz;
+options.mzStep     = p.Results.mzStep;
+options.startIndex = p.Results.startIndex;
+options.endIndex   = p.Results.endIndex;
 
 % ---------------------------------------
 % Validate
 % ---------------------------------------
 
-% Input: peaks
-if numel(peaks) <= 0
-    fprintf('[ERROR] Peaks is empty...\n');
+% Input: data
+if numel(data) <= 0
+    fprintf('[ERROR] Data is empty...\n');
     return
 end
 
-if ~isfield(peaks, 'mz')
-    fprintf('[ERROR] Peaks does not contain "mz" field...\n');
+if ~isfield(data, 'peaks')
+    fprintf('[ERROR] Data does not contain "peaks" field...\n');
 end
 
-if ~isfield(peaks, 'mz')
-    fprintf('[ERROR] Peaks does not contain "intensity" field...\n');
+for i = options.startIndex:options.endIndex
+    if isempty(data(i).peaks)
+        continue
+    end
+
+    if ~isfield(data(i).peaks, 'mz')
+        fprintf('[ERROR] Peaks does not contain "mz" field...\n');
+        return
+    end
+    
+    if ~isfield(data(i).peaks, 'intensity')
+        fprintf('[ERROR] Peaks does not contain "intensity" field...\n');
+        return
+    end
 end
 
 % Input: library
@@ -101,69 +118,152 @@ end
 
 if ~isfield(library, 'mz')
     fprintf('[ERROR] Library does not contain "mz" field...\n');
+    return
 end
 
 if ~isfield(library, 'intensity')
     fprintf('[ERROR] Library does not contain "intensity" field...\n');
+    return
 end
 
-% Parameter: 'min_score'
-if options.min_score < 0
-    options.min_score = 0;
+% Parameter: 'minScore'
+if options.minScore < 0
+options.minScore = 0;
 end
 
-% Parameter: 'min_mz'
-if ~isempty(options.min_mz) && options.min_mz < 0
-    options.min_mz = [];
+% Parameter: 'minMz'
+if ~isempty(options.minMz) && options.minMz < 0
+    options.minMz = [];
 end
 
-% Parameter: 'max_mz'
-if ~isempty(options.max_mz) && options.max_mz < 0
-    options.max_mz = [];
+% Parameter: 'maxMz'
+if ~isempty(options.maxMz) && options.maxMz < 0
+    options.maxMz = [];
 end
 
-% Parameter: 'mz_step'
-if options.mz_step < 0
-    options.mz_step = 1;
+% Parameter: 'mzStep'
+if options.mzStep < 0
+    options.mzStep = 1;
+end
+
+% Parameter: 'startIndex'
+if isempty(options.startIndex)
+    options.startIndex = default.startIndex;
+end
+
+if options.startIndex < 0 || options.startIndex > length(data)
+    options.startIndex = default.startIndex;
+end
+
+% Parameter: 'endIndex'
+if isempty(options.endIndex)
+    options.endIndex = default.endIndex;
+end
+
+if options.endIndex < 0 || options.endIndex > length(data)
+    options.endIndex = default.endIndex;
+end
+
+if options.endIndex < options.startIndex
+    options.endIndex = options.startIndex;
 end
 
 % ---------------------------------------
-% Spectral matching
+% Status
 % ---------------------------------------
 fprintf(['\n', repmat('-',1,50), '\n']);
-fprintf(' Spectral Matching');
-fprintf(['\n', repmat('-',1,50), '\n\n']);
+fprintf(' SPECTRAL MATCHING');
+fprintf(['\n', repmat('-',1,50), '\n']);
 
-fprintf(['[STATUS] Library contains ', num2str(length(library)), ' entries...\n']);
-fprintf(['[STATUS] Performing spectral matching on ', num2str(length(peaks)), ' peaks...\n\n']);
+fprintf([' STATUS  Library contains ', num2str(length(library)), ' entries...\n']);
+fprintf([' STATUS  Matching peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n']);
+fprintf([' STATUS  Minimum match score : ', num2str(options.minScore), '\n\n']);
+totalMatchTime = tic;
+totalPeaks = 0;
+totalMatches = 0;
 
-for i = 1:length(peaks)
+for i = options.startIndex:options.endIndex
 
-    fprintf(['[STATUS] Peak #', num2str(i), ' calculating...\n']);
-    tic;
+    m = num2str(i);
+    n = num2str(options.endIndex);
 
-    matches = SpectralMatch( ...
-        peaks(i).mz, ...
-        peaks(i).intensity, ...
-        library, ...
-        'num_matches', 5, ...
-        'min_score', options.min_score, ...
-        'min_mz', options.min_mz, ...
-        'max_mz', options.max_mz, ...
-        'mz_step', options.mz_step);
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ': START\n']);
+    matchTime = tic;
 
-    if isempty(matches)
-        peaks(i).library_match = [];
-        peaks(i).match_score = 0;
-    else
-        peaks(i).library_match = matches(1);
-        peaks(i).match_score = matches(1).score;
+    % -----------------------------------------
+    % Check data
+    % -----------------------------------------
+    if isempty(data(i).peaks)
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', data(i).sample_name, ': END (no peaks...)\n\n']);
+        continue
     end
 
-    fprintf([ ...
-        '[STATUS] Peak #', num2str(i), ...
-        ', Top Match: ', num2str(peaks(i).match_score), ...
-        ', Compute Time: ', num2str(round(toc,2)), ' sec.\n']);
+    totalPeaks = totalPeaks + length(data(i).peaks);
+    peaksMz = {data(i).peaks.mz};
+    peaksIntensity = {data(i).peaks.intensity};
+
+    % -----------------------------------------
+    % Perform spectral matching on peaks
+    % -----------------------------------------
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ': finding matches for ', num2str(length(peaksMz)), ' peaks...\n']);
+
+    matches = SpectralMatch( ...
+        peaksMz, ...
+        peaksIntensity, ...
+        library, ...
+        'num_matches', 5, ...
+        'min_score', options.minScore, ...
+        'min_mz', options.minMz, ...
+        'max_mz', options.maxMz, ...
+        'mz_step', options.mzStep);
+    
+    % -----------------------------------------
+    % Update data with matches
+    % -----------------------------------------
+    numPeaksWithMatches = sum(cellfun(@(x) length(x), matches) > 0);
+    totalMatches = totalMatches + numPeaksWithMatches;
+
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ': found library matches for ', num2str(numPeaksWithMatches), ' peaks...\n']);
+
+    for j = 1:length(matches)
+        if isempty(matches{j})
+            data(i).peaks(j).library_match = [];
+            data(i).peaks(j).match_score = 0;
+        else
+            data(i).peaks(j).library_match = matches{j}(1);
+            data(i).peaks(j).match_score = matches{j}(1).score;
+        end
+    end
+
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ': END (processing time: ', parsetime(toc(matchTime)), ')\n\n']);
 
 end
 
+totalProcessTime = toc(totalMatchTime);
+fprintf([' STATUS  Total peaks processed : ', num2str(totalPeaks), '\n']);
+fprintf([' STATUS  Total matches found   : ', num2str(totalMatches), '\n']);
+fprintf([' STATUS  Total processing time : ', parsetime(totalProcessTime), '\n']);
+
+fprintf([repmat('-',1,50), '\n']);
+fprintf(' EXIT');
+fprintf(['\n', repmat('-',1,50), '\n']);
+
+end
+
+% ---------------------------------------
+% Format time string
+% ---------------------------------------
+function str = parsetime(x)
+
+if x > 60
+    str = [num2str(x/60, '%.1f'), ' min'];
+else
+    str = [num2str(x, '%.1f'), ' sec'];
+end
+
+end

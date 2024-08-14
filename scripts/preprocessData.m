@@ -14,6 +14,8 @@ default.time_start = [];
 default.time_end = [];
 default.baseline_smoothness = 1E7;
 default.baseline_asymmetry = 1E-4;
+default.startIndex = 1;
+default.endIndex = length(data);
 
 % ---------------------------------------
 % Input
@@ -24,6 +26,8 @@ addOptional(p, 'timeStart', default.time_start);
 addOptional(p, 'timeEnd', default.time_end)
 addOptional(p, 'baselineSmoothness', default.baseline_smoothness);
 addOptional(p, 'baselineAsymmetry', default.baseline_asymmetry);
+addOptional(p, 'startIndex', default.startIndex);
+addOptional(p, 'endIndex', default.endIndex);
 
 parse(p, varargin{:});
 
@@ -34,27 +38,60 @@ options.timeStart = p.Results.timeStart;
 options.timeEnd = p.Results.timeEnd;
 options.baselineSmoothness = p.Results.baselineSmoothness;
 options.baselineAsymmetry = p.Results.baselineAsymmetry;
+options.startIndex = p.Results.startIndex;
+options.endIndex = p.Results.endIndex;
+
+% ---------------------------------------
+% Validate
+% ---------------------------------------
+
+% Parameter: 'startIndex'
+if isempty(options.startIndex)
+    options.startIndex = default.startIndex;
+end
+
+if options.startIndex < 0 || options.startIndex > length(data)
+    options.startIndex = default.startIndex;
+end
+
+% Parameter: 'endIndex'
+if isempty(options.endIndex)
+    options.endIndex = default.endIndex;
+end
+
+if options.endIndex < 0 || options.endIndex > length(data)
+    options.endIndex = default.endIndex;
+end
+
+if options.endIndex < options.startIndex
+    options.endIndex = options.startIndex;
+end
 
 % -----------------------------------------
 % Status
 % -----------------------------------------
 fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' PREPROCESSING DATA');
-fprintf(['\n', repmat('-',1,50), '\n\n']);
+fprintf(['\n', repmat('-',1,50), '\n']);
 
-fprintf([' STATUS  Preprocessing ', num2str(length(data)), ' files...', '\n\n']);
+fprintf([' STATUS  Preprocessing ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
+totalProcessTime = 0;
 
 % -----------------------------------------
 % Preprocessing
 % -----------------------------------------
-for i = 1:size(data,1)
+for i = options.startIndex:options.endIndex
 
     m = num2str(i);
-    n = num2str(size(data,1));
-    
-    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ' START\n']);
+    n = num2str(options.endIndex);
 
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', data(i).sample_name, ': START\n']);
+    preprocessTime = tic;
+
+    % -----------------------------------------
+    % Crop signals by time
+    % -----------------------------------------
     if isempty(options.timeStart)
         timeStart = data(i).time(1) - 1;
     else
@@ -67,16 +104,13 @@ for i = 1:size(data,1)
         timeEnd = options.timeEnd;
     end
    
-    % -----------------------------------------
-    % Crop signals by time
-    % -----------------------------------------
     data(i) = cropDataByTimeRange(data(i), timeStart, timeEnd);
 
     % -----------------------------------------
     % Centroid mass spectra
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ' centroiding...']);
+    fprintf([' ', data(i).sample_name, ': centroiding...']);
     fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
 
     channelWithoutTic = data(i).channel(:, 2:end);
@@ -91,7 +125,7 @@ for i = 1:size(data,1)
     % Baseline correction on all chromatograms
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ' calculating baselines...']);
+    fprintf([' ', data(i).sample_name, ': calculating baselines...']);
     fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
 
     data(i).baseline = Baseline(data(i).intensity, ...
@@ -101,11 +135,31 @@ for i = 1:size(data,1)
     % -----------------------------------------
     % Status
     % -----------------------------------------
+    processTime = toc(preprocessTime);
+    totalProcessTime = totalProcessTime + processTime;
+
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ' END\n']);
+    fprintf([' ', data(i).sample_name, ': END (', parsetime(processTime), ')\n\n']);
     
 end
 
-fprintf(['\n', repmat('-',1,50), '\n']);
+fprintf([' STATUS  Total processing time : ', parsetime(totalProcessTime), '\n']);
+
+fprintf([repmat('-',1,50), '\n']);
 fprintf(' EXIT');
 fprintf(['\n', repmat('-',1,50), '\n']);
+
+end
+
+% ---------------------------------------
+% Format time string
+% ---------------------------------------
+function str = parsetime(x)
+
+if x > 60
+    str = [num2str(x/60, '%.1f'), ' min'];
+else
+    str = [num2str(x, '%.1f'), ' sec'];
+end
+
+end
