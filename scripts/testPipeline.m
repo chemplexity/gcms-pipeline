@@ -9,10 +9,26 @@ library = CleanupLibrary(library, ...
     'max_mz', 600);
 
 %% Import data
-data = ImportAgilent();
+data = ImportAgilent('depth', 5);
 
 %% Validate data (remove non-MS files)
 data = validateData(data);
+
+%% Remove samples containing target string (e.g. solvent blanks)
+removeIndex = [];
+removeNames = {'dcm', 'blank'};
+
+% Remove DCM and Blanks
+for i = 1:length(data)
+    for j = 1:length(removeNames)
+        if contains(lower(data(i).sample_name), removeNames{j})
+            removeIndex(end+1) = i;
+            break
+        end
+    end
+end
+
+data(removeIndex) = [];
 
 %% Add file checksum
 data = addChecksum(data);

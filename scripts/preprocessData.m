@@ -84,9 +84,10 @@ for i = options.startIndex:options.endIndex
 
     m = num2str(i);
     n = num2str(options.endIndex);
+    sampleName = strrep(data(i).sample_name, '%', '');
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': START\n']);
+    fprintf([' ', sampleName, ': START\n']);
     preprocessTime = tic;
 
     % -----------------------------------------
@@ -110,7 +111,7 @@ for i = options.startIndex:options.endIndex
     % Centroid mass spectra
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': centroiding...']);
+    fprintf([' ', sampleName, ': centroiding...']);
     fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
 
     channelWithoutTic = data(i).channel(:, 2:end);
@@ -125,7 +126,7 @@ for i = options.startIndex:options.endIndex
     % Baseline correction on all chromatograms
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': calculating baselines...']);
+    fprintf([' ', sampleName, ': calculating baselines...']);
     fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
 
     data(i).baseline = Baseline(data(i).intensity, ...
@@ -139,7 +140,7 @@ for i = options.startIndex:options.endIndex
     totalProcessTime = totalProcessTime + processTime;
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': END (', parsetime(processTime), ')\n\n']);
+    fprintf([' ', sampleName, ': END (', parsetime(processTime), ')\n\n']);
     
 end
 

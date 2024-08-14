@@ -83,9 +83,10 @@ for i = options.startIndex:options.endIndex
 
     m = num2str(i);
     n = num2str(options.endIndex);
-    
+    sampleName = strrep(data(i).sample_name, '%', '');
+
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': START\n']);
+    fprintf([' ', sampleName, ': START\n']);
     
     peakList = [];
 
@@ -100,7 +101,7 @@ for i = options.startIndex:options.endIndex
     % Detect peaks
     % ---------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': detecting peaks...\n']);
+    fprintf([' ', sampleName, ': detecting peaks...\n']);
 
     peakLocations = peakfindNN( ...
         data(i).time, ...
@@ -117,7 +118,7 @@ for i = options.startIndex:options.endIndex
     % Integrate peaks
     % ---------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': integrating peaks...\n']);
+    fprintf([' ', sampleName, ': integrating peaks...\n']);
     
     for j = 1:length(peakLocations(:,1))
 
@@ -195,7 +196,7 @@ for i = options.startIndex:options.endIndex
     % Status
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': END']);
+    fprintf([' ', sampleName, ': END']);
     fprintf([' (', num2str(length(data(i).peaks)), ' peaks)\n\n']);
 
 end

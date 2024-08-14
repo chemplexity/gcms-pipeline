@@ -6,10 +6,15 @@ function data = addChecksum(data)
 % checksum as a field in each row of data
 % ------------------------------------------------------------------------
 
-for i=1:size(data, 1)
+for i = 1:size(data, 1)
 
-    fullFileName = strcat(data(i).file_path, '/', data(i).file_name);
-    data(i).checksum = GetFileChecksum(fullFileName, 'hash', 'MD5');
+    % Get full file name
+    fullFileName = strcat(data(i).file_path, filesep, data(i).file_name);
+    
+    % Get MD5 checksum
+    data(i).checksum = GetFileChecksum(fullFileName, ...
+        'hash', 'MD5',...
+        'verbose', false);
     
 end
 

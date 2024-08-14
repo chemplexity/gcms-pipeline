@@ -186,9 +186,10 @@ for i = options.startIndex:options.endIndex
 
     m = num2str(i);
     n = num2str(options.endIndex);
+    sampleName = strrep(data(i).sample_name, '%', '');
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': START\n']);
+    fprintf([' ', sampleName, ': START\n']);
     matchTime = tic;
 
     % -----------------------------------------
@@ -196,7 +197,7 @@ for i = options.startIndex:options.endIndex
     % -----------------------------------------
     if isempty(data(i).peaks)
         fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-        fprintf([' ', data(i).sample_name, ': END (no peaks...)\n\n']);
+        fprintf([' ', sampleName, ': END (no peaks...)\n\n']);
         continue
     end
 
@@ -208,7 +209,7 @@ for i = options.startIndex:options.endIndex
     % Perform spectral matching on peaks
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': finding matches for ', num2str(length(peaksMz)), ' peaks...\n']);
+    fprintf([' ', sampleName, ': finding matches for ', num2str(length(peaksMz)), ' peaks...\n']);
 
     matches = SpectralMatch( ...
         peaksMz, ...
@@ -227,7 +228,7 @@ for i = options.startIndex:options.endIndex
     totalMatches = totalMatches + numPeaksWithMatches;
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': found library matches for ', num2str(numPeaksWithMatches), ' peaks...\n']);
+    fprintf([' ', sampleName, ': found library matches for ', num2str(numPeaksWithMatches), ' peaks...\n']);
 
     for j = 1:length(matches)
         if isempty(matches{j})
@@ -240,7 +241,7 @@ for i = options.startIndex:options.endIndex
     end
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': END (', parsetime(toc(matchTime)), ')\n\n']);
+    fprintf([' ', sampleName, ': END (', parsetime(toc(matchTime)), ')\n\n']);
 
 end
 
