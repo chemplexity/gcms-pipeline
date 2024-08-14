@@ -14,6 +14,9 @@ data = ImportAgilent();
 %% Validate data (remove non-MS files)
 data = validateData(data);
 
+%% Add file checksum
+data = addChecksum(data);
+
 %% Plot TIC data (initialize)
 idx = 1;
 
@@ -75,7 +78,7 @@ peaksData = reformatPeaksData(data);
 idx = 1;
 jdx = 1;
 
-plotMassSpectraMatch(data, idx, jdx);
+plotMassSpectraMatch(data, idx, jdx, 50);
 
 %% Plot mass spectra of matches (manual increment) 
 jdx = jdx + 1;

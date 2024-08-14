@@ -86,35 +86,47 @@ plot(sampleTime, sampleIntensity, ...
 
 hold all;
 
-% Plot peak
-xmin = data(sampleIndex).peaks(peakIndex).xmin;
-xmax = data(sampleIndex).peaks(peakIndex).xmax;
-ymin = data(sampleIndex).peaks(peakIndex).ymin;
-ymax = data(sampleIndex).peaks(peakIndex).ymax;
-ypad = (ymax-ymin) * 0.075;
+% Plot peaks
+peakTimes = [data(sampleIndex).peaks.time];
+peakFilter = peakTimes >= (peakTime - sampleWindow) & peakTimes <= (peakTime + sampleWindow);
+peaks = data(sampleIndex).peaks(peakFilter);
 
-xf = sampleTime >= xmin & sampleTime <= xmax;
-xArea = sampleTime(xf);
-yArea = sampleIntensity(xf);
-
-if ~isempty(xArea) && ~isempty(yArea)
-    xArea = [xArea(:); flipud([xmin; xmax])];
-    yArea = [yArea(:); flipud([ymin; ymin])];
-
-    fill(xArea, yArea, [0.00, 0.30, 0.53],...
-        'parent', options.axes_plot, ...
-        'facecolor', [0.00, 0.30, 0.53],...
-        'facealpha', 0.3,...
-        'edgecolor', 'none',...
-        'linestyle', 'none');
+for i = 1:length(peaks)
+    xmin = peaks(i).xmin;
+    xmax = peaks(i).xmax;
+    ymin = peaks(i).ymin;
     
-    plot( ...
-        data(sampleIndex).peaks(peakIndex).time, ...
-        data(sampleIndex).peaks(peakIndex).height + data(sampleIndex).peaks(peakIndex).ymin, ...
-        '.', ...
-        'parent', options.axes_plot, ...
-        'color', 'red', ...
-        'markersize', 10);
+    xf = sampleTime >= xmin & sampleTime <= xmax;
+    xArea = sampleTime(xf);
+    yArea = sampleIntensity(xf);
+    
+    if ~isempty(xArea) && ~isempty(yArea)
+        xArea = [xArea(:); flipud([xmin; xmax])];
+        yArea = [yArea(:); flipud([ymin; ymin])];
+    
+        if peaks(i).time == peakTime
+            faceColor = [0.00, 0.30, 0.53];
+        else
+            faceColor = [0.93, 0.30, 0.30];
+        end
+
+        fill(xArea, yArea, [0.00, 0.30, 0.53],...
+            'parent', options.axes_plot, ...
+            'facecolor', faceColor,...
+            'facealpha', 0.3,...
+            'edgecolor', 'none',...
+            'linestyle', 'none');
+        
+        if peaks(i).time == peakTime
+            plot( ...
+                peaks(i).time, ...
+                peaks(i).height + peaks(i).ymin, ...
+                '.', ...
+                'parent', options.axes_plot, ...
+                'color', 'red', ...
+                'markersize', 10);
+        end
+    end
 end
                 
 % Plot mass spectra
@@ -140,9 +152,21 @@ text(...
     'clipping', 'on', ...
     'fontsize', 12);
 
+scoreValue = num2str(data(sampleIndex).peaks(peakIndex).match_score);
+scoreText = ['Score: ', scoreValue];
+
+text(...
+    options.xlimits(2), options.ylimits(2)-0.025, scoreText, ...
+    'parent', options.axes_spectra,...
+    'horizontalalignment', 'right',... 
+    'verticalalignment', 'top',...
+    'clipping', 'on', ...
+    'fontweight', 'demi', ...
+    'fontsize', 12);
+
 % Title
-plotTitle = ['Sample #', num2str(sampleIndex), ', Peak #' num2str(peakIndex), ', Score: '];
-plotTitle = [plotTitle, num2str(data(sampleIndex).peaks(peakIndex).match_score)]; 
+plotTitle = ['Sample #', num2str(sampleIndex), ', Peak #' num2str(peakIndex), '/', num2str(length(data(sampleIndex).peaks)),' - '];
+plotTitle = [plotTitle, data(sampleIndex).sample_name];
 
 title(plotTitle, 'parent', options.axes_plot);
 
@@ -154,6 +178,10 @@ xlabel('Mass (m/z)', 'parent', options.axes_spectra);
 ylabel('Intensity (%)', 'parent', options.axes_spectra);
 
 % Axes limits
+ymin = data(sampleIndex).peaks(peakIndex).ymin;
+ymax = data(sampleIndex).peaks(peakIndex).ymax;
+ypad = (ymax-ymin) * 0.075;
+
 set(options.axes_plot, 'xlim', [peakTime - sampleWindow, peakTime + sampleWindow]);
 set(options.axes_plot, 'ylim', [ymin-ypad, ymax+ypad]);
 

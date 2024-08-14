@@ -144,6 +144,12 @@ for i = 1:length(library)
         delete_index(end+1) = i;
         fprintf(['[STATUS] Removing row #', num2str(i), ' (NaN)\n']);
     end
+
+    % Remove any spectra named 'Z ARTIFACT'
+    if strcmpi(library(i).compound_name, 'Z ARTIFACT')
+        delete_index(end+1) = i;
+        fprintf(['[STATUS] Removing row #', num2str(i), ' (Z ARTIFACT)\n']);
+    end
 end
 
 library(delete_index) = [];
