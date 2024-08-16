@@ -84,8 +84,15 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' PEAK DETECTION');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
+fprintf([' OPTIONS  startIndex      : ', num2str(options.startIndex), '\n']);
+fprintf([' OPTIONS  endIndex        : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  maxError        : ', num2str(options.maxError), '\n']);
+fprintf([' OPTIONS  minPeakHeight   : ', num2str(options.minPeakHeight), '\n']);
+fprintf([' OPTIONS  minPeakWidth    : ', num2str(options.minPeakWidth), '\n']);
+fprintf([' OPTIONS  minIonIntensity : ', num2str(options.minIonIntensity), '\n\n']);
+
 fprintf([' STATUS  Detecting peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
-peakTime = tic;
+totalProcessTime = 0;
 
 for i = options.startIndex:options.endIndex
 
@@ -95,6 +102,7 @@ for i = options.startIndex:options.endIndex
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
     fprintf([' ', sampleName, ': START\n']);
+    peakTime = tic;
     
     peakList = [];
 
@@ -213,19 +221,21 @@ for i = options.startIndex:options.endIndex
     % -----------------------------------------
     % Status
     % -----------------------------------------
+    processTime = toc(peakTime);
+    totalProcessTime = totalProcessTime + processTime;
+
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
     fprintf([' ', sampleName, ': END']);
-    fprintf([' (', num2str(length(data(i).peaks)), ' peaks)\n\n']);
+    fprintf([' (', num2str(length(data(i).peaks)), ' peaks, ', parsetime(processTime), ')\n\n']);
 
 end
 
-totalTime = toc(peakTime);
-totalFiles = num2str(length(data(options.startIndex:options.endIndex)));
 totalPeaks = num2str(sum(length([data(options.startIndex:options.endIndex).peaks])));
+totalFiles = num2str(length(data(options.startIndex:options.endIndex)));
 
-fprintf([' STATUS  Total files : ', totalFiles, '\n']);
 fprintf([' STATUS  Total peaks : ', totalPeaks, '\n']);
-fprintf([' STATUS  Total time  : ', parsetime(totalTime), '\n']);
+fprintf([' STATUS  Total files : ', totalFiles, '\n']);
+fprintf([' STATUS  Total time  : ', parsetime(totalProcessTime), '\n']);
 
 fprintf([repmat('-',1,50), '\n']);
 fprintf(' EXIT');

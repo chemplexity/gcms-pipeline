@@ -29,6 +29,7 @@ for i = 1:size(data,1)
     [~, fileName , fileExtension] = fileparts(data(i).file_name);
     [~, seqName , ~] = fileparts(data(i).file_path);
     fileBase = strrep(data(i).file_name, '\', '/');
+    fileBase = strrep(fileBase, '%', '');
 
     % -----------------------------------------
     % Check if file extension is .MS
@@ -103,9 +104,9 @@ data(removeIndex) = [];
 % -----------------------------------------
 % Get MD5 checksums for files
 % -----------------------------------------
-fprintf(['\n STATUS  Caclulating MD5 checksums for ', num2str(length(data)), ' files...']);
+fprintf(['\n STATUS  Caclulating MD5 checksums for ', num2str(length(data)), ' files...\n']);
 data = addChecksum(data);
-fprintf(['\n STATUS  Caclulating MD5 checksums complete!\n\n']);
+fprintf(' STATUS  Caclulating MD5 checksums complete!\n\n');
 
 fprintf([' STATUS  Invalid files : ', num2str(length(removeIndex)), '\n']);
 fprintf([' STATUS  Valid files   : ', num2str(length(data)), '\n']);

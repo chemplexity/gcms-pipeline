@@ -146,6 +146,10 @@ plot(matchMz, -matchIntensity, ...
 compoundName = strsplit(data(sampleIndex).peaks(peakIndex).library_match(1).compound_name, ';');
 compoundName = upper(compoundName{1});
 
+if length(compoundName) > 100
+    compoundName = compoundName(1:100);
+end
+
 text(...
     options.xlimits(2), options.ylimits(1)+0.025, compoundName, ...
     'parent', options.axes_spectra,...
@@ -169,6 +173,7 @@ text(...
 % Title
 plotTitle = ['Sample #', num2str(sampleIndex), ', Peak #' num2str(peakIndex), '/', num2str(length(data(sampleIndex).peaks)),' - '];
 plotTitle = [plotTitle, data(sampleIndex).sample_name];
+plotTitle = strrep(plotTitle, '_', '\_');
 
 title(plotTitle, 'parent', options.axes_plot);
 

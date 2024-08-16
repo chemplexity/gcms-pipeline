@@ -1,4 +1,19 @@
-function plotChromatogramWithLibraryMatches(data, sampleIndex)
+function plotChromatogramWithLibraryMatches(data, sampleIndex, varargin)
+
+% Set label type (compound_name OR compound_ontology)
+if ~isempty(varargin)
+    compoundTextField = varargin{1};
+else
+    compoundTextField = 'compound_name';
+end
+
+if ~any(strcmp(compoundTextField, {'compound_ontology', 'compound_name'}))
+    compoundTextField = 'compound_name';
+end
+
+if strcmpi(compoundTextField, 'compound_ontology')
+    compoundColors = getCompoundOntologyColors(data, sampleIndex);
+end
 
 % Get data
 sampleTime = data(sampleIndex).time;
@@ -11,8 +26,14 @@ options.line.color = [0.22,0.22,0.22];
 options.line.width = 1.25;
 
 % Get axes limits
-xminPlot = min([data(sampleIndex).peaks.time]);
-xmaxPlot = max([data(sampleIndex).peaks.time]);
+if isempty(data(sampleIndex).peaks)
+    xminPlot = min([data(sampleIndex).time]);
+    xmaxPlot = max([data(sampleIndex).time]);
+else
+    xminPlot = min([data(sampleIndex).peaks.xmin]);
+    xmaxPlot = max([data(sampleIndex).peaks.xmax]);
+end
+
 yminPlot = min(data(sampleIndex).intensity(:,1));
 ymaxPlot = max(data(sampleIndex).intensity(:,1));
 
@@ -57,6 +78,7 @@ hold all;
 
 % Plot peaks
 peaks = data(sampleIndex).peaks;
+peakFill = [];
 textPad = (max(data(sampleIndex).intensity(:,1)) - min(data(sampleIndex).intensity(:,1))) * 0.01;
 
 for i = 1:length(peaks)
@@ -72,47 +94,75 @@ for i = 1:length(peaks)
         xArea = [xArea(:); flipud([xmin; xmax])];
         yArea = [yArea(:); flipud([ymin; ymin])];
     
-        if isempty(peaks(i).library_match)
-            faceColor = [0.93, 0.30, 0.30];
+        if strcmpi(compoundTextField, 'compound_ontology')
+            if isempty(peaks(i).library_match)
+                faceColor = [0.7, 0.7, 0.7];
+            else
+                compoundOntology = peaks(i).library_match(1).compound_ontology;
+                colorIndex = strcmpi(compoundOntology, {compoundColors{:,1}});
+                faceColor = compoundColors{colorIndex,2};
+                textColor = faceColor;
+            end
         else
-            faceColor = [0.30, peaks(i).match_score/100, 0.30];
+            if isempty(peaks(i).library_match)
+                faceColor = [0.93, 0.30, 0.30];
+            else
+                faceColor = [0.30, peaks(i).match_score/100, 0.30];
+            end
+
+            textColor = 'black';
         end
 
-        fill(xArea, yArea, [0.00, 0.30, 0.53],...
+        peakFill(end+1) = fill(xArea, yArea, [0.00, 0.30, 0.53], ...
             'parent', options.axes_plot, ...
-            'facecolor', faceColor,...
-            'facealpha', 0.3,...
-            'edgecolor', 'none',...
+            'facecolor', faceColor, ...
+            'facealpha', 0.3, ...
+            'edgecolor', 'none', ...
             'linestyle', 'none');
         
-        % Plot library match text
         if isempty(peaks(i).library_match)
             continue;
         end
 
-        plot(peaks(i).time, peaks(i).height + peaks(i).ymin, '.', ...
+        if strcmpi(compoundTextField, 'compound_ontology')
+            set(peakFill(end), 'displayname', upper(compoundOntology));
+        end
+
+        if peaks(i).peakCenterY > peaks(i).height + peaks(i).ymin && ...
+            peaks(i).peakCenterX >= peaks(i).xmin && ...
+            peaks(i).peakCenterX <= peaks(i).xmax
+            peakX = peaks(i).peakCenterX;
+            peakY = peaks(i).peakCenterY;
+        else
+            peakX = peaks(i).time;
+            peakY = peaks(i).height + peaks(i).ymin;
+        end
+        
+        plot(peakX, peakY, '.', ...
             'parent', options.axes_plot, ...
             'color', 'red', ...
             'markersize', 5);
 
-        compoundName = strsplit(peaks(i).library_match(1).compound_name, ';');
-        compoundName = upper(compoundName{1});
+        % Plot library match text
+        compoundText = strsplit(peaks(i).library_match(1).(compoundTextField), ';');
+        compoundText = upper(compoundText{1});
         
-        if length(compoundName) > 20
-            compoundName = compoundName(1:20);
+        if length(compoundText) > 20
+            compoundText = compoundText(1:20);
         end
 
         scoreText = num2str(peaks(i).match_score, '%.1f');
-        peakText = [compoundName, ' (', scoreText, ')'];
+        peakText = [compoundText, ' (', scoreText, ')'];
 
-        peakTextX = peaks(i).time;
-        peakTextY = peaks(i).height + peaks(i).ymin + textPad;
+        peakTextX = peakX;
+        peakTextY = peakY + textPad;
 
         peakLabel = text(...
             peakTextX, peakTextY, peakText, ...
-            'parent', options.axes_plot,...
-            'horizontalalignment', 'left',... 
-            'verticalalignment', 'middle',...
+            'parent', options.axes_plot, ...
+            'horizontalalignment', 'left', ... 
+            'verticalalignment', 'middle', ...
+            'color', textColor, ...
             'clipping', 'on', ...
             'fontsize', 6);
 
@@ -125,8 +175,14 @@ for i = 1:length(peaks)
     end
 end
 
+% Legend
+% if strcmpi(compoundTextField, 'compound_ontology')
+%     peakFill = getUniquePeakFill(peakFill, compoundColors);
+%     legend(peakFill, 'location', 'best', 'fontsize', 6);
+% end
+
 % Title
-plotTitle = ['Sample #', num2str(sampleIndex), ' - ', data(sampleIndex).sample_name];
+plotTitle = getPlotTitle(data, sampleIndex);
 title(plotTitle, 'parent', options.axes_plot);
 
 % Axes labels
@@ -137,4 +193,68 @@ ylabel('Intensity', 'parent', options.axes_plot);
 set(options.axes_plot, 'xlim', [xminPlot-xpadPlot, xmaxPlot+xpadPlot]);
 set(options.axes_plot, 'ylim', [yminPlot-ypadPlot, ymaxPlot+ypadPlot]);
 
+end
+
+% -----------------------------------------
+% Get plot title
+% -----------------------------------------
+function titleText = getPlotTitle(data, sampleIndex)
+    
+% Get file name and extension
+    [~, sequenceName , ~] = fileparts(data(sampleIndex).file_path);
+    [fileBase, ~, ~] = fileparts(data(sampleIndex).file_name);
+    sampleName = data(sampleIndex).sample_name;
+
+    titleText = [sequenceName, '/', fileBase, ', ', sampleName];
+
+    titleText = strrep(titleText, '\', '/');
+    titleText = strrep(titleText, '%', '');
+    titleText = strrep(titleText, '_', '\_');
+end
+
+% -----------------------------------------
+% Get all compound ontologies and color map
+% -----------------------------------------
+function compoundOntology = getCompoundOntologyColors(data, sampleIndex)
+
+compoundOntology = {};
+
+for i = 1:length(data(sampleIndex).peaks)
+    if isempty(data(sampleIndex).peaks(i).library_match)
+        continue
+    end
+
+    if ~isempty(data(sampleIndex).peaks(i).library_match(1).compound_ontology)
+        compoundOntology{end+1} = lower(data(sampleIndex).peaks(i).library_match(1).compound_ontology);
+    end
+end
+
+compoundOntology = sort(unique(compoundOntology))';
+compoundColors = orderedcolors('gem12');
+
+colorIndex = 1;
+
+for i = 1:length(compoundOntology)
+    compoundOntology{i,2} = compoundColors(colorIndex, :);
+    compoundOntology{i,3} = 0;
+    colorIndex = colorIndex + 1;
+
+    if colorIndex > length(compoundColors)
+        colorIndex = 1;
+    end
+end
+
+end
+
+% -----------------------------------------
+% Get unique compound ontologies for legend
+% -----------------------------------------
+function peakFill = getUniquePeakFill(peakFillList, compoundColors)
+    peakFill = [];
+    displayNames = get(peakFillList, 'displayname');
+
+    for i = 1:length(compoundColors)
+        peakFillIndex = find(strcmpi(compoundColors{i,1}, displayNames));
+        peakFill(end+1) = peakFillList(1, peakFillIndex(1));
+    end
 end

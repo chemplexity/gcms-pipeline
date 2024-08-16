@@ -175,10 +175,16 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' SPECTRAL MATCHING');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
+fprintf([' OPTIONS  startIndex : ', num2str(options.startIndex), '\n']);
+fprintf([' OPTIONS  endIndex   : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  minScore   : ', num2str(options.minScore), '\n']);
+fprintf([' OPTIONS  minMz      : ', num2str(options.minMz), '\n']);
+fprintf([' OPTIONS  maxMz      : ', num2str(options.maxMz), '\n\n']);
+
 fprintf([' STATUS  Library contains ', num2str(length(library)), ' entries...\n']);
-fprintf([' STATUS  Matching peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n']);
-fprintf([' STATUS  Minimum match score : ', num2str(options.minScore), '\n\n']);
-totalMatchTime = tic;
+fprintf([' STATUS  Matching peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
+
+totalProcessTime = tic;
 totalPeaks = 0;
 totalMatches = 0;
 
@@ -245,10 +251,13 @@ for i = options.startIndex:options.endIndex
 
 end
 
-totalProcessTime = toc(totalMatchTime);
-fprintf([' STATUS  Total peaks processed : ', num2str(totalPeaks), '\n']);
-fprintf([' STATUS  Total matches found   : ', num2str(totalMatches), '\n']);
-fprintf([' STATUS  Total processing time : ', parsetime(totalProcessTime), '\n']);
+totalPeaks = num2str(totalPeaks);
+totalMatches = num2str(totalMatches);
+totalProcessTime = toc(totalProcessTime);
+
+fprintf([' STATUS  Total peaks   : ', totalPeaks, '\n']);
+fprintf([' STATUS  Total matches : ', totalMatches, '\n']);
+fprintf([' STATUS  Total time    : ', parsetime(totalProcessTime), '\n']);
 
 fprintf([repmat('-',1,50), '\n']);
 fprintf(' EXIT');
