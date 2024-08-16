@@ -10,10 +10,10 @@ function data = preprocessData(data, varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.time_start = [];
-default.time_end = [];
-default.baseline_smoothness = 1E7;
-default.baseline_asymmetry = 1E-4;
+default.timeStart = [];
+default.timeEnd = [];
+default.baselineSmoothness = 5E6;
+default.baselineAsymmetry = 5E-3;
 default.startIndex = 1;
 default.endIndex = length(data);
 
@@ -22,10 +22,10 @@ default.endIndex = length(data);
 % ---------------------------------------
 p = inputParser;
 
-addOptional(p, 'timeStart', default.time_start);
-addOptional(p, 'timeEnd', default.time_end)
-addOptional(p, 'baselineSmoothness', default.baseline_smoothness);
-addOptional(p, 'baselineAsymmetry', default.baseline_asymmetry);
+addOptional(p, 'timeStart', default.timeStart);
+addOptional(p, 'timeEnd', default.timeEnd)
+addOptional(p, 'baselineSmoothness', default.baselineSmoothness);
+addOptional(p, 'baselineAsymmetry', default.baselineAsymmetry);
 addOptional(p, 'startIndex', default.startIndex);
 addOptional(p, 'endIndex', default.endIndex);
 
@@ -74,6 +74,25 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' PREPROCESSING DATA');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
+if isempty(options.timeStart)
+    timeStartString = 'N/A';
+else
+    timeStartString = num2str(options.timeStart);
+end
+
+if isempty(options.timeEnd)
+    timeEndString = 'N/A';
+else
+    timeEndString = num2str(options.timeEnd);
+end
+
+fprintf([' OPTIONS  startIndex         : ', num2str(options.startIndex), '\n']);
+fprintf([' OPTIONS  endIndex           : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  timeStart          : ', timeStartString, '\n']);
+fprintf([' OPTIONS  timeEnd            : ', timeEndString, '\n']);
+fprintf([' OPTIONS  baselineSmoothness : ', num2str(options.baselineSmoothness), '\n']);
+fprintf([' OPTIONS  baselineAsymmetry  : ', num2str(options.baselineAsymmetry), '\n\n']);
+
 fprintf([' STATUS  Preprocessing ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
 totalProcessTime = 0;
 
@@ -84,9 +103,10 @@ for i = options.startIndex:options.endIndex
 
     m = num2str(i);
     n = num2str(options.endIndex);
+    sampleName = strrep(data(i).sample_name, '%', '');
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': START\n']);
+    fprintf([' ', sampleName, ': START\n']);
     preprocessTime = tic;
 
     % -----------------------------------------
@@ -110,8 +130,8 @@ for i = options.startIndex:options.endIndex
     % Centroid mass spectra
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': centroiding...']);
-    fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
+    fprintf([' ', sampleName, ': centroiding...']);
+    fprintf([' (', num2str(length(data(i).time)), 'x', num2str(length(data(i).channel)), ')\n']);
 
     channelWithoutTic = data(i).channel(:, 2:end);
     intensityWithoutTic = data(i).intensity(:, 2:end);
@@ -125,8 +145,8 @@ for i = options.startIndex:options.endIndex
     % Baseline correction on all chromatograms
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': calculating baselines...']);
-    fprintf([' (', num2str(length(data(i).channel)), ' vectors)\n']);
+    fprintf([' ', sampleName, ': calculating baselines...']);
+    fprintf([' (', num2str(length(data(i).time)), 'x', num2str(length(data(i).channel)), ')\n']);
 
     data(i).baseline = Baseline(data(i).intensity, ...
         'smoothness', options.baselineSmoothness, ...
@@ -139,7 +159,7 @@ for i = options.startIndex:options.endIndex
     totalProcessTime = totalProcessTime + processTime;
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': END (', parsetime(processTime), ')\n\n']);
+    fprintf([' ', sampleName, ': END (', parsetime(processTime), ')\n\n']);
     
 end
 

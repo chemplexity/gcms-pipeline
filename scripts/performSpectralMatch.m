@@ -175,10 +175,16 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' SPECTRAL MATCHING');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
+fprintf([' OPTIONS  startIndex : ', num2str(options.startIndex), '\n']);
+fprintf([' OPTIONS  endIndex   : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  minScore   : ', num2str(options.minScore), '\n']);
+fprintf([' OPTIONS  minMz      : ', num2str(options.minMz), '\n']);
+fprintf([' OPTIONS  maxMz      : ', num2str(options.maxMz), '\n\n']);
+
 fprintf([' STATUS  Library contains ', num2str(length(library)), ' entries...\n']);
-fprintf([' STATUS  Matching peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n']);
-fprintf([' STATUS  Minimum match score : ', num2str(options.minScore), '\n\n']);
-totalMatchTime = tic;
+fprintf([' STATUS  Matching peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
+
+totalProcessTime = tic;
 totalPeaks = 0;
 totalMatches = 0;
 
@@ -186,9 +192,10 @@ for i = options.startIndex:options.endIndex
 
     m = num2str(i);
     n = num2str(options.endIndex);
+    sampleName = strrep(data(i).sample_name, '%', '');
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': START\n']);
+    fprintf([' ', sampleName, ': START\n']);
     matchTime = tic;
 
     % -----------------------------------------
@@ -196,7 +203,7 @@ for i = options.startIndex:options.endIndex
     % -----------------------------------------
     if isempty(data(i).peaks)
         fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-        fprintf([' ', data(i).sample_name, ': END (no peaks...)\n\n']);
+        fprintf([' ', sampleName, ': END (no peaks...)\n\n']);
         continue
     end
 
@@ -208,7 +215,7 @@ for i = options.startIndex:options.endIndex
     % Perform spectral matching on peaks
     % -----------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': finding matches for ', num2str(length(peaksMz)), ' peaks...\n']);
+    fprintf([' ', sampleName, ': finding matches for ', num2str(length(peaksMz)), ' peaks...\n']);
 
     matches = SpectralMatch( ...
         peaksMz, ...
@@ -227,7 +234,7 @@ for i = options.startIndex:options.endIndex
     totalMatches = totalMatches + numPeaksWithMatches;
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': found library matches for ', num2str(numPeaksWithMatches), ' peaks...\n']);
+    fprintf([' ', sampleName, ': found library matches for ', num2str(numPeaksWithMatches), ' peaks...\n']);
 
     for j = 1:length(matches)
         if isempty(matches{j})
@@ -240,14 +247,17 @@ for i = options.startIndex:options.endIndex
     end
 
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': END (', parsetime(toc(matchTime)), ')\n\n']);
+    fprintf([' ', sampleName, ': END (', parsetime(toc(matchTime)), ')\n\n']);
 
 end
 
-totalProcessTime = toc(totalMatchTime);
-fprintf([' STATUS  Total peaks processed : ', num2str(totalPeaks), '\n']);
-fprintf([' STATUS  Total matches found   : ', num2str(totalMatches), '\n']);
-fprintf([' STATUS  Total processing time : ', parsetime(totalProcessTime), '\n']);
+totalPeaks = num2str(totalPeaks);
+totalMatches = num2str(totalMatches);
+totalProcessTime = toc(totalProcessTime);
+
+fprintf([' STATUS  Total peaks   : ', totalPeaks, '\n']);
+fprintf([' STATUS  Total matches : ', totalMatches, '\n']);
+fprintf([' STATUS  Total time    : ', parsetime(totalProcessTime), '\n']);
 
 fprintf([repmat('-',1,50), '\n']);
 fprintf(' EXIT');

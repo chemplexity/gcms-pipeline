@@ -3,7 +3,7 @@ function data = validateData(data, varargin)
 % ------------------------------------------------------------------------
 % Method      : validateData
 % Description : check data files are valid and remove any non-MS data 
-% files from data
+% files from data, compute file checksums
 % ------------------------------------------------------------------------
 
 % -----------------------------------------
@@ -29,6 +29,7 @@ for i = 1:size(data,1)
     [~, fileName , fileExtension] = fileparts(data(i).file_name);
     [~, seqName , ~] = fileparts(data(i).file_path);
     fileBase = strrep(data(i).file_name, '\', '/');
+    fileBase = strrep(fileBase, '%', '');
 
     % -----------------------------------------
     % Check if file extension is .MS
@@ -51,6 +52,16 @@ for i = 1:size(data,1)
     end
 
     % -----------------------------------------
+    % Check if data is SIM mode
+    % -----------------------------------------
+    if mean(diff(data(i).channel(2:end))) > 2
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', seqName, '/', fileBase, ': invalid file (SIM Mode)\n']);
+        removeIndex(end+1) = i;
+        continue
+    end
+
+    % -----------------------------------------
     % Check if file name is SNAPSHOT.MS
     % -----------------------------------------
     if strcmpi(fileName, 'snapshot')
@@ -61,13 +72,20 @@ for i = 1:size(data,1)
     end
 
     % -----------------------------------------
-    % Check if channel data is non-empty
+    % Check if channel data is empty
     % -----------------------------------------
     if isempty(data(i).channel)
         fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
         fprintf([' ', seqName, '/', fileBase, ': invalid file (channel data is missing)\n']);
         removeIndex(end+1) = i;
         continue
+    end
+
+    % -----------------------------------------
+    % Check if sample name is empty
+    % -----------------------------------------
+    if isempty(data(i).sample_name)
+        [~, data(i).sample_name, ~] = fileparts(fileparts(data(i).file_name));
     end
 
     % -----------------------------------------
@@ -83,7 +101,14 @@ end
 % -----------------------------------------
 data(removeIndex) = [];
 
-fprintf(['\n STATUS  Invalid files : ', num2str(length(removeIndex)), '\n']);
+% -----------------------------------------
+% Get MD5 checksums for files
+% -----------------------------------------
+fprintf(['\n STATUS  Caclulating MD5 checksums for ', num2str(length(data)), ' files...\n']);
+data = addChecksum(data);
+fprintf(' STATUS  Caclulating MD5 checksums complete!\n\n');
+
+fprintf([' STATUS  Invalid files : ', num2str(length(removeIndex)), '\n']);
 fprintf([' STATUS  Valid files   : ', num2str(length(data)), '\n']);
 
 fprintf([repmat('-',1,50), '\n']);

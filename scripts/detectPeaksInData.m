@@ -10,11 +10,12 @@ function data = detectPeaksInData(data, varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.maxError = 50;
-default.minPeakHeight = 1E4;
+default.maxError        = 50;
+default.minPeakHeight   = 1E4;
+default.minPeakWidth    = 0.01;
 default.minIonIntensity = 0.02;
-default.startIndex = 1;
-default.endIndex = length(data);
+default.startIndex      = 1;
+default.endIndex        = length(data);
 
 % ---------------------------------------
 % Input
@@ -23,6 +24,7 @@ p = inputParser;
 
 addOptional(p, 'maxError', default.maxError);
 addOptional(p, 'minPeakHeight', default.minPeakHeight)
+addOptional(p, 'minPeakWidth', default.minPeakWidth)
 addOptional(p, 'minIonIntensity', default.minIonIntensity);
 addOptional(p, 'startIndex', default.startIndex);
 addOptional(p, 'endIndex', default.endIndex);
@@ -32,11 +34,12 @@ parse(p, varargin{:});
 % ---------------------------------------
 % Parse
 % ---------------------------------------
-options.maxError = p.Results.maxError;
-options.minPeakHeight = p.Results.minPeakHeight;
+options.maxError        = p.Results.maxError;
+options.minPeakHeight   = p.Results.minPeakHeight;
+options.minPeakWidth    = p.Results.minPeakWidth;
 options.minIonIntensity = p.Results.minIonIntensity;
-options.startIndex = p.Results.startIndex;
-options.endIndex = p.Results.endIndex;
+options.startIndex      = p.Results.startIndex;
+options.endIndex        = p.Results.endIndex;
 
 % ---------------------------------------
 % Validate
@@ -45,6 +48,11 @@ options.endIndex = p.Results.endIndex;
 % Parameter: 'minIonIntensity'
 if options.minIonIntensity > 1
     options.minIonIntensity = options.minIonIntensity / 100;
+end
+
+% Parameter: 'minPeakWidth'
+if options.minPeakWidth < 0
+    options.minPeakWidth = default.minPeakWidth;
 end
 
 % Parameter: 'startIndex'
@@ -76,16 +84,25 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' PEAK DETECTION');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
+fprintf([' OPTIONS  startIndex      : ', num2str(options.startIndex), '\n']);
+fprintf([' OPTIONS  endIndex        : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  maxError        : ', num2str(options.maxError), '\n']);
+fprintf([' OPTIONS  minPeakHeight   : ', num2str(options.minPeakHeight), '\n']);
+fprintf([' OPTIONS  minPeakWidth    : ', num2str(options.minPeakWidth), '\n']);
+fprintf([' OPTIONS  minIonIntensity : ', num2str(options.minIonIntensity), '\n\n']);
+
 fprintf([' STATUS  Detecting peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
-peakTime = tic;
+totalProcessTime = 0;
 
 for i = options.startIndex:options.endIndex
 
     m = num2str(i);
     n = num2str(options.endIndex);
-    
+    sampleName = strrep(data(i).sample_name, '%', '');
+
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': START\n']);
+    fprintf([' ', sampleName, ': START\n']);
+    peakTime = tic;
     
     peakList = [];
 
@@ -100,7 +117,7 @@ for i = options.startIndex:options.endIndex
     % Detect peaks
     % ---------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': detecting peaks...\n']);
+    fprintf([' ', sampleName, ': detecting peaks...\n']);
 
     peakLocations = peakfindNN( ...
         data(i).time, ...
@@ -117,7 +134,7 @@ for i = options.startIndex:options.endIndex
     % Integrate peaks
     % ---------------------------------------
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': integrating peaks...\n']);
+    fprintf([' ', sampleName, ': integrating peaks...\n']);
     
     for j = 1:length(peakLocations(:,1))
 
@@ -134,7 +151,17 @@ for i = options.startIndex:options.endIndex
 
         % Filter by peak height
         if peak.height < options.minPeakHeight
-            continue;
+            continue
+        end
+
+        % Filter by peak width
+        if peak.width < options.minPeakWidth
+            continue
+        end
+
+        % Filter if peak time is outside range
+        if peak.time <= peak.xmin || peak.time >= peak.xmax
+            continue
         end
         
         peak.peakCenterX = peakLocations(j, 1);
@@ -194,19 +221,21 @@ for i = options.startIndex:options.endIndex
     % -----------------------------------------
     % Status
     % -----------------------------------------
+    processTime = toc(peakTime);
+    totalProcessTime = totalProcessTime + processTime;
+
     fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', data(i).sample_name, ': END']);
-    fprintf([' (', num2str(length(data(i).peaks)), ' peaks)\n\n']);
+    fprintf([' ', sampleName, ': END']);
+    fprintf([' (', num2str(length(data(i).peaks)), ' peaks, ', parsetime(processTime), ')\n\n']);
 
 end
 
-totalTime = toc(peakTime);
-totalFiles = num2str(length(data(options.startIndex:options.endIndex)));
 totalPeaks = num2str(sum(length([data(options.startIndex:options.endIndex).peaks])));
+totalFiles = num2str(length(data(options.startIndex:options.endIndex)));
 
-fprintf([' STATUS  Total files : ', totalFiles, '\n']);
 fprintf([' STATUS  Total peaks : ', totalPeaks, '\n']);
-fprintf([' STATUS  Total time  : ', parsetime(totalTime), '\n']);
+fprintf([' STATUS  Total files : ', totalFiles, '\n']);
+fprintf([' STATUS  Total time  : ', parsetime(totalProcessTime), '\n']);
 
 fprintf([repmat('-',1,50), '\n']);
 fprintf(' EXIT');
