@@ -115,7 +115,7 @@ if isempty(data(idx).peaks(jdx).library_match)
     fprintf(['[ERROR] No match at sample index: ', num2str(idx), ', peak index: ', num2str(jdx), '\n']);
 end
 
-plotMassSpectraMatch(data, idx, jdx, 50);
+plotMassSpectraMatch(data, idx, jdx, 40);
 
 %% Plot mass spectra of matches (auto) 
 while true
@@ -135,7 +135,7 @@ while true
         continue;
     end
 
-    plotMassSpectraMatch(data, idx, jdx, 50);
+    plotMassSpectraMatch(data, idx, jdx, 40);
     pause(2);
 end
 
@@ -152,7 +152,7 @@ if idx > length(data)
 end
 
 plotType = {'compound_name', 'compound_ontology'}
-plotChromatogramWithLibraryMatches(data, idx, plotType{2});
+plotChromatogramWithLibraryMatches(data, idx, plotType{1});
 
 %% Plot mass spectra of matches (auto) 
 while true
@@ -163,6 +163,6 @@ while true
     end
     
     plotType = {'compound_name', 'compound_ontology'};
-    plotChromatogramWithLibraryMatches(data, idx, plotType{2});
+    plotChromatogramWithLibraryMatches(data, idx, plotType{1});
     pause(3);
 end
