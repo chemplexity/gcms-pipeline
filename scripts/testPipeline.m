@@ -97,7 +97,7 @@ peaksData = reformatPeaksData(data);
 idx = 1;
 jdx = 1;
 
-plotMassSpectraMatch(data, idx, jdx, 50);
+plotMassSpectraMatch(data, idx, jdx, 40);
 
 %% Plot mass spectra of matches (manual increment) 
 jdx = jdx + 1;
@@ -152,7 +152,7 @@ if idx > length(data)
 end
 
 plotType = {'compound_name', 'compound_ontology'}
-plotChromatogramWithLibraryMatches(data, idx, plotType{1});
+plotChromatogramWithLibraryMatches(data, idx, plotType{2});
 
 %% Plot mass spectra of matches (auto) 
 while true
