@@ -50,6 +50,9 @@ data = detectPeaksInData(data);
 preppedDataSamples = prepareDataSamples(data);
 UpdateDatabaseSamples(db, preppedDataSamples);
 
+% for sample reprocessing, we'll want to delete all the peaks associated
+% with the sample & upload the new peak table
+
 for i=1:length(data)
 
     preppedDataPeaks = prepareDataPeaks(db, data, i);

@@ -15,7 +15,8 @@ else
 end
 
 table = 'peaks';
-field = 'peak_time';
+fieldOne = 'peak_time';
+fieldTwo = 'sample_id';
 index = [];
 
 if ~skipDuplicateCheck
@@ -23,21 +24,19 @@ if ~skipDuplicateCheck
     fprintf('Checking for Duplicates\n');
     
     for i = 1:length(peaksData)
-
-        if i > length(peaksData)
-            fprintf(['[' num2str(i), ' was removed as a duplicate] \n']);
-            break
-        end 
        
         fprintf(['[', num2str(i), '/', num2str(length(peaksData)), '] \n']);
        
         query = [sprintf('%s', ...
             'SELECT COUNT(*)', ...
             'FROM ', table, ' ', ...
-            'WHERE ', field, '=''', char(peaksData(i).(field)), '''')];
+            'WHERE ', fieldOne, '=''', char(peaksData(i).(fieldOne)), '''', ...
+            'AND ', fieldTwo, '=''', char(peaksData(i).(fieldTwo)), '')];
         
-        if isempty(peaksData(i).(field))
-            data{1} = 1;
+        % check other field too
+        if isempty(peaksData(i).(fieldOne)) | ...
+            isempty(peaksData(i).(fieldTwo))
+            data{1,1} = 0;
         else
             data = fetch(conn, query);
         end
@@ -51,7 +50,9 @@ if ~skipDuplicateCheck
         for j = 1:length(peaksData)
             if j > length(peaksData)
                 break   
-            elseif i~=j && strcmp(peaksData(i).(field), peaksData(j).(field))
+            elseif i~=j && strcmp(peaksData(i).(field), peaksData(j). ...
+                    (fieldOne)) && strcmp(peaksData(i).(fieldTwo), ...
+                    peaksData(j).(fieldTwo))
                 index(end+1) = j;
                 fprintf('[DUPLICATE IN INPUT DATA] ')
                 fprintf(['peak row: ' num2str(j), '\n']);

@@ -38,7 +38,7 @@ if ~skipDuplicateCheck
             'WHERE ', field, '=''', char(samplesData(i).(field)), '''')];
         
         if isempty(samplesData(i).(field))
-            data{1} = 1;
+            data{1,1} = 1;
         else
             data = fetch(conn, query);
         end

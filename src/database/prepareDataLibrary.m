@@ -17,7 +17,13 @@ for i=1:length(data)
     db(i).compound_synonym = data(i).compound_synonym;
     db(i).compound_formula = data(i).compound_formula;
     db(i).compound_mw = data(i).compound_mw;
-    db(i).compound_exact_mass = data(i).compound_exact_mass;
+
+    if isempty(data(i).compound_exact_mass)
+        db(i).compound_exact_mass = NaN;
+    else
+        db(i).compound_exact_mass = data(i).compound_exact_mass;
+    end
+
     db(i).compound_retention_time = sprintf('%.6f', ...
         data(i).compound_retention_time);
     db(i).compound_retention_index = data(i).compound_retention_index;

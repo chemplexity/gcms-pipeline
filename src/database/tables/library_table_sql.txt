@@ -11,7 +11,7 @@ create table library
     compound_formula            TEXT,
     compound_mw                 REAL,
     compound_exact_mass         REAL,
-    compound_retention_time     REAL    not null,
+    compound_retention_time     TEXT    not null,
     compound_retention_index    REAL, 
     cas_id                      REAL,
     nist_id                     REAL,

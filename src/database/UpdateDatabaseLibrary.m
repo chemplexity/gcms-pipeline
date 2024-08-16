@@ -19,6 +19,7 @@ table = 'library';
 fieldOne = 'file_path';
 fieldTwo = 'file_name';
 fieldThree = 'compound_retention_time';
+fieldFour = 'compound_retention_index';
 index = [];
 
 if ~skipDuplicateCheck
@@ -27,11 +28,6 @@ if ~skipDuplicateCheck
 
     for i = 1:length(libraryData)
 
-        if i > length(libraryData)
-            fprintf(['[' num2str(i), ' was removed as a duplicate] \n']);
-            break
-        end 
-
         fprintf(['[', num2str(i), '/', num2str(length(libraryData)), '] \n']);
 
         query = [sprintf('%s', ...
@@ -39,15 +35,14 @@ if ~skipDuplicateCheck
             'FROM ', table, ' ', ...
             'WHERE ', fieldOne, '=''', char(libraryData(i).(fieldOne)),'''', ...
             ' AND ', fieldTwo, '=''', char(libraryData(i).(fieldTwo)),'''', ...
-            ' AND ', fieldThree, '=', string(libraryData(i).(fieldThree)), '')];
+            ' AND ', fieldThree, '=''', string(libraryData(i).(fieldThree)),'''', ...
+            ' AND ', fieldFour, '=''', string(libraryData(i).(fieldFour)), '''')];
      
-        
-        % should we automatically count it as a duplicate
-        % if the field is missing?
         if isempty(libraryData(i).(fieldOne)) ...
                 | isempty(libraryData(i).(fieldTwo)) ...
-                | isempty(libraryData(i).(fieldThree))
-            data{1} = 1;
+                | isempty(libraryData(i).(fieldThree))...
+                | isempty(libraryData(i).(fieldFour))
+            data{1,1} = 0;
         else
             data = fetch(conn, query);
         end
@@ -64,7 +59,8 @@ if ~skipDuplicateCheck
             elseif i~=j && strcmp(libraryData(i).(fieldOne), ...
                     libraryData(j).(fieldOne)) && strcmp(libraryData(i).(fieldTwo), ...
                     libraryData(j).(fieldTwo)) && strcmp(libraryData(i).(fieldThree), ...
-                    libraryData(j).(fieldThree))
+                    libraryData(j).(fieldThree)) && strcmp(libraryData(i).(fieldFour), ...
+                    libraryData(j).(fieldFour))
                 index(end+1) = j;
                 fprintf('[DUPLICATE IN INPUT DATA] ')
                 disp(libraryData(j).file_path);

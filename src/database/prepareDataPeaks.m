@@ -1,4 +1,4 @@
-function data = prepareDataPeaks(database, data, sampleRow)
+function data = prepareDataPeaks(database, data, sampleRow, library)
 
 % ------------------------------------------------------------------------
 % Method      : prepareDataPeaks()
@@ -9,6 +9,8 @@ function data = prepareDataPeaks(database, data, sampleRow)
 
 db = [];
 data = addChecksum(data);
+data = performSpectralMatch(data, library);
+conn = sqlite(database);
 
 for i=1:length(data(sampleRow).peaks)
 
@@ -38,22 +40,55 @@ for i=1:length(data(sampleRow).peaks)
 
     db(i).peak_mz = mz;
     db(i).peak_intensity = intensity;
-
-    if isfield(data(sampleRow).peaks(i), 'match_score')
-        db(i).match_score = data(sampleRow).peaks(i).match_score;
-    else
-        db(i).match_score = 0;
-    end
-
-    % confirm 6 decimal places
     db(i).fit_x = convertDoubleArrayToText(data(sampleRow). ...
         peaks(i).fit(:, 1), '%.6f');
     db(i).fit_y = convertDoubleArrayToText(data(sampleRow). ...
-        peaks(i).fit(:, 2), '%.6f');
+        peaks(i).fit(:, 2), '%.0f');
 
-    % change this later
-    db(i).library_id = 0;
+% ---------------------------------------
+% Perform Spectral Matching
+% ---------------------------------------
+
+    id = 'library_id';
+    table = 'library';
+    fieldOne = 'file_path';
+    fieldTwo = 'file_name';
+    fieldThree = 'compound_retention_time';
+    fieldFour = 'compound_retention_index';
+    
+    if isempty(data(sampleRow).peaks(i).library_match)
+        
+        query = [sprintf('%s', ...
+            'SELECT COUNT(*) ', ...
+            'FROM ', table)];
+        count = fetch(conn, query);
+        db(i).library_id = count{1,1} + 1;
+        db(i).match_score = 0;
+        % EXPORTNIST() TO ADD THIS PEAK TO THE LIBRARY
+
+    else
+
+        ret_time = sprintf('%.6f', data(sampleRow).peaks(i).library_match.(fieldThree));
+
+        query = [sprintf('%s', ...
+            'SELECT ', id,  ...
+            ' FROM ', table, ...
+            ' WHERE ', fieldOne, '=''', char(data(sampleRow).peaks(i).library_match.(fieldOne)),'''', ...
+            ' AND ', fieldTwo, '=''', char(data(sampleRow).peaks(i).library_match.(fieldTwo)),'''', ...
+            ' AND ', fieldThree, '=''', string(ret_time),'''', ...
+            ' AND ', fieldFour, '=''', string(data(sampleRow).peaks(i).library_match.(fieldFour)), '''')];
+
+        match = fetch(conn, query); 
+
+        db(i).library_id = match{1,1};
+        db(i).match_score = data(sampleRow).peaks(i).match_score;
+
+    end
 
 end
 
 data(sampleRow).peaks = db;
+close(conn);
+
+% upload library match as a new entry (only if it doesn't exist),
+% and then link it to the peak (library has no foreign keys)

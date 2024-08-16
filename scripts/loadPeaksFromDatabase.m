@@ -1,7 +1,7 @@
 function database = loadPeaksFromDatabase(db)
 
 % ------------------------------------------------------------------------
-% Method      : loadDatabase()
+% Method      : loadPeaksFromDatabase()
 % Description : loads the Peaks table from the SQL database into 
 % the Matlab workspace and converts the concatenated strings for peak mz,
 % peak intensity, peak fit x, and peak fit y into string arrays
