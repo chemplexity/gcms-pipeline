@@ -102,7 +102,7 @@ plotMassSpectraMatch(data, idx, jdx, 40);
 %% Plot mass spectra of matches (manual increment) 
 jdx = jdx + 1;
 
-if jdx > length(data(idx).peaks)
+if jdx > length(data(idx).peaks) || isempty(data(idx).peaks)
     jdx = 1;
     idx = idx + 1;
 end
@@ -151,7 +151,7 @@ if idx > length(data)
     idx = 1;
 end
 
-plotType = {'compound_name', 'compound_ontology'}
+plotType = {'compound_name', 'compound_ontology'};
 plotChromatogramWithLibraryMatches(data, idx, plotType{2});
 
 %% Plot mass spectra of matches (auto) 

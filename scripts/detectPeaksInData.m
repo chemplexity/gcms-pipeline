@@ -167,8 +167,17 @@ for i = options.startIndex:options.endIndex
         peak.peakCenterX = peakLocations(j, 1);
         peak.peakCenterY = peakLocations(j, 2);
 
+        % Get peak center
+        if peak.peakCenterY > peak.height + peak.ymin && ...
+            peak.peakCenterX >= peak.xmin && ...
+            peak.peakCenterX <= peak.xmax
+            peakX = peak.peakCenterX;
+        else
+            peakX = peak.time;
+        end
+
         % Add the mass spectra of each peak center
-        timeIndex = lookupTimeIndex(data(i).time, peak.peakCenterX);
+        timeIndex = lookupTimeIndex(data(i).time, peakX);
         peak.mz = data(i).channel(2:end);
         peak.intensity = data(i).intensity(timeIndex, 2:end);
 

@@ -32,6 +32,12 @@ if isempty(data(sampleIndex).peaks)
 else
     xminPlot = min([data(sampleIndex).peaks.xmin]);
     xmaxPlot = max([data(sampleIndex).peaks.xmax]);
+
+    if xmaxPlot - xminPlot < 5
+        xExtra = (xmaxPlot - xminPlot) / 2;
+        xminPlot = xminPlot - xExtra;
+        xmaxPlot = xmaxPlot + xExtra;
+    end
 end
 
 yminPlot = min(data(sampleIndex).intensity(:,1));
@@ -175,12 +181,6 @@ for i = 1:length(peaks)
     end
 end
 
-% Legend
-% if strcmpi(compoundTextField, 'compound_ontology')
-%     peakFill = getUniquePeakFill(peakFill, compoundColors);
-%     legend(peakFill, 'location', 'best', 'fontsize', 6);
-% end
-
 % Title
 plotTitle = getPlotTitle(data, sampleIndex);
 title(plotTitle, 'parent', options.axes_plot);
@@ -244,17 +244,4 @@ for i = 1:length(compoundOntology)
     end
 end
 
-end
-
-% -----------------------------------------
-% Get unique compound ontologies for legend
-% -----------------------------------------
-function peakFill = getUniquePeakFill(peakFillList, compoundColors)
-    peakFill = [];
-    displayNames = get(peakFillList, 'displayname');
-
-    for i = 1:length(compoundColors)
-        peakFillIndex = find(strcmpi(compoundColors{i,1}, displayNames));
-        peakFill(end+1) = peakFillList(1, peakFillIndex(1));
-    end
 end

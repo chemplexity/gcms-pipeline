@@ -59,9 +59,10 @@ parse(p, varargin{:});
 % ---------------------------------------
 library = p.Results.library;
 
-options.min_points = p.Results.min_points;
-options.min_mz     = p.Results.min_mz;
-options.max_mz     = p.Results.max_mz;
+options.min_points    = p.Results.min_points;
+options.min_mz        = p.Results.min_mz;
+options.max_mz        = p.Results.max_mz;
+options.min_intensity = 0.1;
 
 % ---------------------------------------
 % Validate
@@ -133,6 +134,11 @@ delete_index = [];
 
 for i = 1:length(library)
     
+    % Remove any points < min_intensity
+    intensityFilter = library(i).intensity ./ max(library(i).intensity) >= options.min_intensity;
+    library(i).mz = library(i).mz(intensityFilter);
+    library(i).intensity = library(i).intensity(intensityFilter);
+
     % Remove any spectra < min_points
     if length(library(i).mz) < options.min_points
         delete_index(end+1) = i;
@@ -150,6 +156,7 @@ for i = 1:length(library)
         delete_index(end+1) = i;
         fprintf(['[STATUS] Removing row #', num2str(i), ' (Z ARTIFACT)\n']);
     end
+
 end
 
 library(delete_index) = [];

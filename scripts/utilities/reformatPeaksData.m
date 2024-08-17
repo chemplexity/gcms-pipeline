@@ -7,7 +7,7 @@ peaksFields = {
     'sampling_rate', 'time', 'width', 'height', 'area', 'areaOf', 'fit', 'error', ...
     'xmin', 'xmax', 'ymin', 'ymax', 'runtime', 'model', 'revision', ...
     'peakCenterX', 'peakCenterY', 'mz', 'intensity', 'match_score', ...
-    'match_file_name', 'match_compound_name', 'match_compound_formula',...
+    'match_file_name', 'match_compound_name', 'match_compound_ontology', 'match_compound_formula',...
     'match_compound_exact_mass', 'match_num_peaks', 'match_mz', 'match_intensity'};
 
 peaksData = struct();
@@ -71,6 +71,7 @@ for i = 1:length(data)
 
         peaksData(end,1).match_file_name = data(i).peaks(j).library_match(1).file_name;
         peaksData(end,1).match_compound_name = data(i).peaks(j).library_match(1).compound_name;
+        peaksData(end,1).match_compound_ontology = data(i).peaks(j).library_match(1).compound_ontology;
         peaksData(end,1).match_compound_formula = data(i).peaks(j).library_match(1).compound_formula;
         peaksData(end,1).match_compound_exact_mass = data(i).peaks(j).library_match(1).compound_exact_mass;
         peaksData(end,1).match_num_peaks = data(i).peaks(j).library_match(1).num_peaks;
