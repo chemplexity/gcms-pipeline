@@ -298,6 +298,9 @@ switch varargin{2}
     case 'file_count'
         fprintf([' STATUS  Importing ', num2str(varargin{3}), ' files...', '\n\n']);
 
+    case 'file_error'
+        fprintf([' STATUS  No files found...', '\n']);
+
     case 'file_error_incomplete'
         fprintf([' STATUS  File is incomplete, unable to import data...', '\n']);
         

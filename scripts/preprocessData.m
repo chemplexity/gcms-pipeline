@@ -3,19 +3,18 @@ function data = preprocessData(data, varargin)
 % ------------------------------------------------------------------------
 % Method      : preprocessData
 % Description : crops the signal by time, applies the centroid algorithm 
-% to data.channel and data.intensity, and calculates and returns the
-% baseline
+% and calculates the baseline for all chromatograms
 % ------------------------------------------------------------------------
 
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.timeStart = [];
-default.timeEnd = [];
+default.timeStart          = [];
+default.timeEnd            = [];
 default.baselineSmoothness = 5E6;
-default.baselineAsymmetry = 5E-3;
-default.startIndex = 1;
-default.endIndex = length(data);
+default.baselineAsymmetry  = 5E-3;
+default.startIndex         = 1;
+default.endIndex           = length(data);
 
 % ---------------------------------------
 % Input
@@ -34,12 +33,12 @@ parse(p, varargin{:});
 % ---------------------------------------
 % Parse
 % ---------------------------------------
-options.timeStart = p.Results.timeStart;
-options.timeEnd = p.Results.timeEnd;
+options.timeStart          = p.Results.timeStart;
+options.timeEnd            = p.Results.timeEnd;
 options.baselineSmoothness = p.Results.baselineSmoothness;
-options.baselineAsymmetry = p.Results.baselineAsymmetry;
-options.startIndex = p.Results.startIndex;
-options.endIndex = p.Results.endIndex;
+options.baselineAsymmetry  = p.Results.baselineAsymmetry;
+options.startIndex         = p.Results.startIndex;
+options.endIndex           = p.Results.endIndex;
 
 % ---------------------------------------
 % Validate

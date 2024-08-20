@@ -13,10 +13,12 @@ peakIntensity = data(sampleIndex).peaks(peakIndex).intensity;
 
 peakFilter = peakMz >= minMz;
 peakMz = peakMz(peakFilter);
-peakIntensity = Normalize(peakIntensity(peakFilter));
+peakIntensity = peakIntensity(peakFilter);
+peakIntensity = peakIntensity ./ max(peakIntensity);
 
 matchMz = data(sampleIndex).peaks(peakIndex).library_match(1).mz;
-matchIntensity = Normalize(data(sampleIndex).peaks(peakIndex).library_match(1).intensity);
+matchIntensity = data(sampleIndex).peaks(peakIndex).library_match(1).intensity;
+matchIntensity = matchIntensity ./ max(matchIntensity);
 
 % Set plot options
 options.xlimits = [min([peakMz, matchMz])-20, max([peakMz, matchMz])+20];

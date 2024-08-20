@@ -82,6 +82,36 @@ for i = 1:size(data,1)
     end
 
     % -----------------------------------------
+    % Check if data is BSB (vendor baseline)
+    % -----------------------------------------
+    if any(cellfun(@any, regexpi(data(i).operator, {'\[BSB'})))
+        matchIndex = find(strcmpi(data(i).datetime, {data.datetime}));
+        matchIndex(matchIndex == i) = [];
+
+        isDuplicate = true;
+        checkFields = {'file_size', 'sample_name', 'method_name', 'dir_offset'};
+        
+        % Check if BSB file is duplicate
+        if length(matchIndex) >= 1
+            for j = 1:length(matchIndex)
+                for k = 1:length(checkFields)
+                    if data(matchIndex).(checkFields{k}) ~= data(i).(checkFields{k})
+                        isDuplicate = false;
+                        break;
+                    end
+                end
+            end
+        end
+
+        if isDuplicate
+            fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+            fprintf([' ', seqName, '/', fileBase, ': duplicate file (BSB)\n']);
+            removeIndex(end+1) = i;
+            continue
+        end
+    end
+
+    % -----------------------------------------
     % Check if sample name is empty
     % -----------------------------------------
     if isempty(data(i).sample_name)

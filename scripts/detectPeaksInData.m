@@ -187,7 +187,7 @@ for i = options.startIndex:options.endIndex
         end
         
         % Normalize peak intensity and filter by minimum ion intensity
-        peak.intensity = Normalize(peak.intensity);
+        peak.intensity = peak.intensity ./ max(peak.intensity);
         peakFilter = peak.intensity >= options.minIonIntensity;
 
         peak.mz = peak.mz(peakFilter);

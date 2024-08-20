@@ -62,7 +62,7 @@ library = p.Results.library;
 options.min_points    = p.Results.min_points;
 options.min_mz        = p.Results.min_mz;
 options.max_mz        = p.Results.max_mz;
-options.min_intensity = 0.1;
+options.min_intensity = 0.02;
 
 % ---------------------------------------
 % Validate

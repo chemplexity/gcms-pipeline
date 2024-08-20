@@ -219,15 +219,38 @@ function compoundOntology = getCompoundOntologyColors(data, sampleIndex)
 
 compoundOntology = {};
 
-for i = 1:length(data(sampleIndex).peaks)
-    if isempty(data(sampleIndex).peaks(i).library_match)
+% Get all compound ontologies for consistent colors
+for i = 1:length(data)
+    if ~isfield(data, 'peaks')
         continue
     end
 
-    if ~isempty(data(sampleIndex).peaks(i).library_match(1).compound_ontology)
-        compoundOntology{end+1} = lower(data(sampleIndex).peaks(i).library_match(1).compound_ontology);
+    if ~isfield(data(i).peaks, 'library_match')
+        continue
+    end
+
+    libraryMatch = [data(i).peaks(~[data(i).peaks.match_score] == 0).library_match];
+    
+    if isempty(libraryMatch)
+        continue
+    end
+    
+    libraryMatch = unique({libraryMatch.compound_ontology});
+    
+    for j = 1:length(libraryMatch)
+        compoundOntology{end+1} = lower(libraryMatch{j});
     end
 end
+
+% for i = 1:length(data(sampleIndex).peaks)
+%     if isempty(data(sampleIndex).peaks(i).library_match)
+%         continue
+%     end
+% 
+%     if ~isempty(data(sampleIndex).peaks(i).library_match(1).compound_ontology)
+%         compoundOntology{end+1} = lower(data(sampleIndex).peaks(i).library_match(1).compound_ontology);
+%     end
+% end
 
 compoundOntology = sort(unique(compoundOntology))';
 compoundColors = orderedcolors('gem12');
