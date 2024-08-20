@@ -10,12 +10,13 @@ function data = detectPeaksInData(data, varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.maxError        = 50;
-default.minPeakHeight   = 1E4;
-default.minPeakWidth    = 0.01;
-default.minIonIntensity = 0.02;
-default.startIndex      = 1;
-default.endIndex        = length(data);
+default.maxError         = 50;
+default.minPeakHeight    = 1E4;
+default.minPeakWidth     = 0.01;
+default.minIonIntensity  = 0.02;
+default.minSignalToNoise = 2;
+default.startIndex       = 1;
+default.endIndex         = length(data);
 
 % ---------------------------------------
 % Input
@@ -26,6 +27,7 @@ addOptional(p, 'maxError', default.maxError);
 addOptional(p, 'minPeakHeight', default.minPeakHeight)
 addOptional(p, 'minPeakWidth', default.minPeakWidth)
 addOptional(p, 'minIonIntensity', default.minIonIntensity);
+addOptional(p, 'minSignalToNoise', default.minSignalToNoise);
 addOptional(p, 'startIndex', default.startIndex);
 addOptional(p, 'endIndex', default.endIndex);
 
@@ -34,12 +36,13 @@ parse(p, varargin{:});
 % ---------------------------------------
 % Parse
 % ---------------------------------------
-options.maxError        = p.Results.maxError;
-options.minPeakHeight   = p.Results.minPeakHeight;
-options.minPeakWidth    = p.Results.minPeakWidth;
-options.minIonIntensity = p.Results.minIonIntensity;
-options.startIndex      = p.Results.startIndex;
-options.endIndex        = p.Results.endIndex;
+options.maxError         = p.Results.maxError;
+options.minPeakHeight    = p.Results.minPeakHeight;
+options.minPeakWidth     = p.Results.minPeakWidth;
+options.minIonIntensity  = p.Results.minIonIntensity;
+options.minSignalToNoise = p.Results.minSignalToNoise;
+options.startIndex       = p.Results.startIndex;
+options.endIndex         = p.Results.endIndex;
 
 % ---------------------------------------
 % Validate
@@ -84,12 +87,13 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' PEAK DETECTION');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
-fprintf([' OPTIONS  startIndex      : ', num2str(options.startIndex), '\n']);
-fprintf([' OPTIONS  endIndex        : ', num2str(options.endIndex), '\n']);
-fprintf([' OPTIONS  maxError        : ', num2str(options.maxError), '\n']);
-fprintf([' OPTIONS  minPeakHeight   : ', num2str(options.minPeakHeight), '\n']);
-fprintf([' OPTIONS  minPeakWidth    : ', num2str(options.minPeakWidth), '\n']);
-fprintf([' OPTIONS  minIonIntensity : ', num2str(options.minIonIntensity), '\n\n']);
+fprintf([' OPTIONS  startIndex       : ', num2str(options.startIndex), '\n']);
+fprintf([' OPTIONS  endIndex         : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  maxError         : ', num2str(options.maxError), '\n']);
+fprintf([' OPTIONS  minPeakHeight    : ', num2str(options.minPeakHeight), '\n']);
+fprintf([' OPTIONS  minPeakWidth     : ', num2str(options.minPeakWidth), '\n']);
+fprintf([' OPTIONS  minIonIntensity  : ', num2str(options.minIonIntensity), '\n']);
+fprintf([' OPTIONS  minSignalToNoise : ', num2str(options.minSignalToNoise), '\n\n']);
 
 fprintf([' STATUS  Detecting peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
 totalProcessTime = 0;
@@ -226,6 +230,25 @@ for i = options.startIndex:options.endIndex
 
     peakList(removeIndex) = [];
     data(i).peaks = peakList;
+
+    % ---------------------------------------
+    % Filter by signal to noise
+    % ---------------------------------------
+    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+    fprintf([' ', sampleName, ': calculating signal to noise...\n']);
+
+    data = getSignalToNoise(data, i);
+    removeIndex = [];
+
+    for j = 1:length(data(i).peaks)
+        if data(i).peaks(j).snr < options.minSignalToNoise
+            removeIndex(end+1) = j;
+        end
+    end
+
+    if ~isempty(data(i).peaks)
+        data(i).peaks(removeIndex) = [];
+    end
 
     % -----------------------------------------
     % Status
