@@ -17,6 +17,7 @@ for i=1:length(data)
     db(i).compound_synonym = data(i).compound_synonym;
     db(i).compound_formula = data(i).compound_formula;
     db(i).compound_mw = data(i).compound_mw;
+    db(i).compound_ontology = data(i).compound_ontology;
 
     if isempty(data(i).compound_exact_mass)
         db(i).compound_exact_mass = NaN;

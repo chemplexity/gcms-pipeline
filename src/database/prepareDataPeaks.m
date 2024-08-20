@@ -1,4 +1,4 @@
-function data = prepareDataPeaks(database, data, sampleRow, library)
+function data = prepareDataPeaks(database, data, sampleRow)
 
 % ------------------------------------------------------------------------
 % Method      : prepareDataPeaks()
@@ -8,8 +8,22 @@ function data = prepareDataPeaks(database, data, sampleRow, library)
 % ------------------------------------------------------------------------
 
 db = [];
-data = addChecksum(data);
-data = performSpectralMatch(data, library);
+
+if ~isfield(data, 'checksum')
+    fprintf('[ERROR] missing checksum field \n')
+    return
+end
+
+if ~isfield(data, 'peaks')
+    fprintf('[ERROR] missing peaks data \n')
+    return
+end
+
+if ~isfield(data(sampleRow).peaks, 'library_match')
+    fprintf('[ERROR] missing library match \n')
+    return
+end
+
 conn = sqlite(database);
 
 for i=1:length(data(sampleRow).peaks)
@@ -48,7 +62,7 @@ for i=1:length(data(sampleRow).peaks)
 % ---------------------------------------
 % Perform Spectral Matching
 % ---------------------------------------
-
+    
     id = 'library_id';
     table = 'library';
     fieldOne = 'file_path';
@@ -56,15 +70,18 @@ for i=1:length(data(sampleRow).peaks)
     fieldThree = 'compound_retention_time';
     fieldFour = 'compound_retention_index';
     
-    if isempty(data(sampleRow).peaks(i).library_match)
+    if isempty(data(sampleRow).peaks(i).library_match) 
         
         query = [sprintf('%s', ...
-            'SELECT COUNT(*) ', ...
+            'SELECT MAX(', id, ') ', ...
             'FROM ', table)];
-        count = fetch(conn, query);
-        db(i).library_id = count{1,1} + 1;
+        max = fetch(conn, query);
+        db(i).library_id = max{1,1} + 1;
         db(i).match_score = 0;
-        % EXPORTNIST() TO ADD THIS PEAK TO THE LIBRARY
+
+        peak = ExportNIST(data(sampleRow), i);
+        peak = prepareDataLibrary(peak);
+        UpdateDatabaseLibrary(database, peak);
 
     else
 
@@ -89,6 +106,3 @@ end
 
 data(sampleRow).peaks = db;
 close(conn);
-
-% upload library match as a new entry (only if it doesn't exist),
-% and then link it to the peak (library has no foreign keys)

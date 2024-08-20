@@ -31,9 +31,8 @@ if ~skipDuplicateCheck
             'SELECT COUNT(*)', ...
             'FROM ', table, ' ', ...
             'WHERE ', fieldOne, '=''', char(peaksData(i).(fieldOne)), '''', ...
-            'AND ', fieldTwo, '=''', char(peaksData(i).(fieldTwo)), '')];
+            'AND ', fieldTwo, '=''', char(peaksData(i).(fieldTwo)), '''')];
         
-        % check other field too
         if isempty(peaksData(i).(fieldOne)) | ...
             isempty(peaksData(i).(fieldTwo))
             data{1,1} = 0;
@@ -50,7 +49,7 @@ if ~skipDuplicateCheck
         for j = 1:length(peaksData)
             if j > length(peaksData)
                 break   
-            elseif i~=j && strcmp(peaksData(i).(field), peaksData(j). ...
+            elseif i~=j && strcmp(peaksData(i).(fieldOne), peaksData(j). ...
                     (fieldOne)) && strcmp(peaksData(i).(fieldTwo), ...
                     peaksData(j).(fieldTwo))
                 index(end+1) = j;
@@ -101,4 +100,3 @@ fprintf('[FINISH] Database update complete!\n');
 close(conn);
 
 end
-

@@ -19,7 +19,7 @@ table = 'library';
 fieldOne = 'file_path';
 fieldTwo = 'file_name';
 fieldThree = 'compound_retention_time';
-fieldFour = 'compound_retention_index';
+fieldFour = 'num_peaks';
 index = [];
 
 if ~skipDuplicateCheck

@@ -9,6 +9,7 @@ create table library
     compound_name               TEXT, 
     compound_synonym            TEXT,
     compound_formula            TEXT,
+    compound_ontology           TEXT,
     compound_mw                 REAL,
     compound_exact_mass         REAL,
     compound_retention_time     TEXT    not null,

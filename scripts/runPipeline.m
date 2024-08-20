@@ -1,4 +1,4 @@
-function data = runPipeline(db, varargin)
+function data = runPipeline(db, library, varargin)
 
 % ------------------------------------------------------------------------
 % Method      : runPipeline()
@@ -35,7 +35,7 @@ options.timeStart = p.Results.timeStart;
 options.timeEnd = p.Results.timeEnd;
 
 % -----------------------------------------
-% Run Pipeline
+% Import and Prepare Data
 % -----------------------------------------
 if isempty(options.fileName)
     data = ImportAgilent();
@@ -45,7 +45,13 @@ end
 
 CreateDatabase('filename', db);
 data = preprocessData(data, options.timeStart, options.timeEnd);
+data = addChecksum(data);
 data = detectPeaksInData(data);
+data = performSpectralMatch(data, library);
+
+% -----------------------------------------
+% Update SQL Databases
+% -----------------------------------------
 
 preppedDataSamples = prepareDataSamples(data);
 UpdateDatabaseSamples(db, preppedDataSamples);
