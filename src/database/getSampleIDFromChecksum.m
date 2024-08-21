@@ -19,6 +19,13 @@ query = [sprintf('%s', ...
             'WHERE ', field, '=''', char(checksum), '''')];
 
 data = fetch(conn, query);
+
+if isempty(data)
+    fprintf('There is no sample with this checksum \n')
+    sampleID = NaN; 
+    return
+end
+
 sampleID = string(table2cell(data(1, 1)));
 
 end

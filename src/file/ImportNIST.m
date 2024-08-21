@@ -41,6 +41,7 @@ data = struct(...
     'file_size',                [],...
     'compound_name',            [],...
     'compound_synonym',         {},...
+    'compound_ontology',        [],...
     'compound_formula',         [],...
     'compound_mw',              [],...
     'compound_exact_mass',      [],...
@@ -453,8 +454,12 @@ function f = parsefile(f)
 
 if ischar(f)
     
-    f = strsplit(f, '\r\n\r\n', 'delimitertype', 'regularexpression');
-   
+    if ispc
+        f = strsplit(f, '\r\n\r\n', 'delimitertype', 'regularexpression');
+    else
+        f = strsplit(f, '\n\n', 'delimitertype', 'regularexpression');
+    end
+
     if iscell(f) && isempty(f{end})
         f(end) = [];
     end
@@ -470,6 +475,7 @@ function data = parseinfo(f, data)
 
 data.compound_name            = parsefield(f, 'Name');
 data.compound_synonym         = parsefield(f, 'Synon');
+data.compound_ontology        = parsefield(f, 'Ontology');
 data.compound_formula         = parsefield(f, 'Formula');
 data.compound_mw              = parsefield(f, 'MW');
 data.compound_exact_mass      = parsefield(f, 'ExactMass');
@@ -561,7 +567,7 @@ else
     str = cellfun(@(x) strtrim(deblank(x{1})), str, 'uniformoutput', 0);
 end
 
-if iscell(str) && length(str) == 1
+if iscell(str) && isscalar(str)
     str = str{1};
 end
 

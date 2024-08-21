@@ -1,4 +1,4 @@
-function nistData = ExportNIST(data, sampleRow, retentionTimes)
+function nistData = ExportNIST(sampleData, peakRow)
 
 % ------------------------------------------------------------------------
 % Method      : ExportNIST()
@@ -12,6 +12,7 @@ nistData = struct(...
     'file_path',                [],...
     'file_name',                [],...
     'file_size',                [],...
+    'date_created',             [],...
     'compound_name',            [],...
     'compound_synonym',         {},...
     'compound_formula',         [],...
@@ -19,6 +20,7 @@ nistData = struct(...
     'compound_exact_mass',      [],...
     'compound_retention_time',  [],...
     'compound_retention_index', [],...
+    'compound_ontology',        [],...
     'cas_id',                   [],...
     'nist_id',                  [],...
     'db_id',                    [],...
@@ -31,21 +33,30 @@ nistData = struct(...
     'mz',                       [],...
     'intensity',                []);
 
-for i=1:size(retentionTimes)
+nistData(1).file_path = sampleData.file_path;
+nistData(1).file_name = sampleData.file_name;
+nistData(1).file_size = sampleData.file_size;
 
-    % assuming the index should be based on ALL retention times from 
-    % the original data and not just the peaks (so that it lines up
-    % with mz)
-    index = lookupTimeIndex(data(sampleRow).time, retentionTimes(i));
-    channelData = data(sampleRow).channel(1, :);
-    peakMassSpectra = data.intensity(index, :);
-    
-    nistData(i).mz = channelData;
-    nistData(i).intensity = peakMassSpectra;
-    nistData(i).compound_retention_time = retentionTimes(i);
-    nistData(i).file_path = data(sampleRow).file_path;
-    nistData(i).file_name = data(sampleRow).file_name;
-    nistData(i).file_size = data(sampleRow).file_size;
+nistData(1).compound_retention_time = sampleData.peaks(peakRow).time;
+nistData(1).num_peaks = length(sampleData.peaks(peakRow).mz);
+nistData(1).mz = sampleData.peaks(peakRow).mz;
+nistData(1).intensity = sampleData.peaks(peakRow).intensity;
+nistData(1).date_created = sampleData.peaks(peakRow).date_created;
 
-    % ask about this
+nistData(1).compound_name = '';
+nistData(1).compound_synonym = '';
+nistData(1).compound_formula = '';
+nistData(1).compound_ontology = '';
+nistData(1).cas_id = '';
+nistData(1).nist_id = '';
+nistData(1).db_id = '';
+nistData(1).smiles = '';
+nistData(1).inchikey = '';
+nistData(1).ion_mode = '';
+nistData(1).collision_energy = '';
+nistData(1).comments = '';
+nistData(1).compound_mw = NaN;
+nistData(1).compound_retention_index = NaN;
+nistData(1).compound_exact_mass = NaN;
+
 end 

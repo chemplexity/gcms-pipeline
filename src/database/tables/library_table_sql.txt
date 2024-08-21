@@ -1,0 +1,29 @@
+create table library
+(
+    library_id                  integer not null
+        constraint library_id
+            primary key,
+    file_path                   TEXT    not null,
+    file_name                   TEXT    not null,
+    file_size                   TEXT,
+    compound_name               TEXT, 
+    compound_synonym            TEXT,
+    compound_formula            TEXT,
+    compound_ontology           TEXT,
+    compound_mw                 REAL,
+    compound_exact_mass         REAL,
+    compound_retention_time     TEXT    not null,
+    compound_retention_index    REAL, 
+    cas_id                      REAL,
+    nist_id                     REAL,
+    db_id                       REAL,
+    smiles                      TEXT,
+    inchikey                    TEXT,
+    ion_mode                    TEXT,
+    collision_energy            TEXT,
+    comments                    TEXT,
+    num_peaks                   REAL,
+    mz                          TEXT,
+    intensity                   TEXT,
+    date_created                TEXT
+);

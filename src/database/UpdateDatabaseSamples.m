@@ -2,9 +2,9 @@ function status = UpdateDatabaseSamples(db, samplesData, varargin)
  
 % ------------------------------------------------------------------------
 % Method      : UpdateDatabaseSamples()
-% Description : connets to the SQL .db file, checks for dulpicate files
+% Description : connects to the SQL .db file, checks for dulpicate files
 % in the passed in data, formats the data in a table, and adds it to 
-% the SQL database
+% the samples table in the SQL database
 % ------------------------------------------------------------------------
 
 conn = sqlite(db);
@@ -18,7 +18,6 @@ end
 table = 'samples';
 field = 'md5_checksum';
 index = [];
-inputDups = [];
 
 if ~skipDuplicateCheck
     
@@ -31,7 +30,7 @@ if ~skipDuplicateCheck
             break
         end 
        
-        fprintf(['[', num2str(i), '/', num2str(length(samplesData)), '] ']);
+        fprintf(['[', num2str(i), '/', num2str(length(samplesData)), '] \n']);
        
         query = [sprintf('%s', ...
             'SELECT COUNT(*)', ...
@@ -39,7 +38,7 @@ if ~skipDuplicateCheck
             'WHERE ', field, '=''', char(samplesData(i).(field)), '''')];
         
         if isempty(samplesData(i).(field))
-            data{1} = 1;
+            data{1,1} = 1;
         else
             data = fetch(conn, query);
         end
@@ -52,17 +51,16 @@ if ~skipDuplicateCheck
            
         for j = 1:length(samplesData)
             if i~=j && strcmp(samplesData(i).(field), samplesData(j).(field))
-                inputDups(end+1) = j;
+                index(end+1) = j;
                 fprintf('[DUPLICATE IN INPUT DATA] ')
-                disp(samplesData(i).file_path);
-                samplesData(j) = [];
+                disp(samplesData(j).file_path);
             end
         end 
     end
     
     if ~isempty(index)
         samplesData(index) = [];
-        fprintf(['[IGNORE] ' num2str(length(index) + length(inputDups)), '\n']);
+        fprintf(['[IGNORE] ' num2str(length(index)), '\n']);
     else
         fprintf('[OK] \n');
     end

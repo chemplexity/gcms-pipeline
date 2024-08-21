@@ -1,21 +1,37 @@
 create table peaks
 (
-    peak_id      integer not null
+    peak_id         integer not null
         constraint peak_id
             primary key,
-    peak_time    REAL    not null,
-    peak_area    REAL    not null,
-    peak_width   REAL    not null,
-    peak_height  REAL    not null,
-    area_Of      REAL,
-    error        REAL,
-    model        TEXT,
-    x_lim        REAL,
-    y_lim        REAL,
-    input_x      REAL,
-    input_y      REAL,
-    date_created TEXT,
-    sample_id    integer
+    peak_time       TEXT    not null,
+    peak_area       REAL    not null,
+    peak_width      REAL    not null,
+    peak_height     REAL    not null,
+    area_Of         REAL,
+    error           REAL,
+    model           TEXT,
+    x_min           REAL, 
+    x_max           REAL, 
+    y_min           REAL, 
+    y_max           REAL,
+    input_x         TEXT,
+    input_y         TEXT,
+    date_created    TEXT,
+    peak_mz         TEXT,
+    peak_intensity  TEXT,
+    match_score     REAL,
+    fit_x           TEXT,
+    fit_y           TEXT,
+
+
+
+    library_id      integer
+        constraint library_id
+            references library,
+
+
+
+    sample_id       integer
         constraint sample_id
             references samples
 );
