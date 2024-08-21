@@ -215,7 +215,7 @@ for i = 1:length(file)
     % ---------------------------------------
     % Permissions
     % ---------------------------------------
-    if ~file(i).UserRead || file(i). directory
+    if ~file(i).UserRead || file(i).directory
         continue
     end
     

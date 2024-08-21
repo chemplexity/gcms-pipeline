@@ -6,38 +6,54 @@ function CreateDatabase(varargin)
 % a samples file
 % ------------------------------------------------------------------------
 
+% Get path of default database
+functionFileName = mfilename("fullpath");
+functionFilePath = fileparts(functionFileName);
+defaultDatabaseFile = [functionFilePath, filesep, 'GCMS_Database.db'];
+
+% Set paths to table definitions
+tablesPath = [functionFilePath, filesep, 'tables'];
+
+samplesTableFile = [tablesPath, filesep, 'samples_table_sql.txt'];
+peaksTableFile   = [tablesPath, filesep, 'peaks_table_sql.txt'];
+libraryTableFile = [tablesPath, filesep, 'library_table_sql.txt'];
+
 p = inputParser;
-addParameter(p, 'filename', './src/database/GCMS_Database.db');
+addParameter(p, 'filename', defaultDatabaseFile);
 parse(p, varargin{:});
 
-[~, name, ~] = fileparts(cd);
-if ~strcmp(name, 'gcms-pipeline')
-    fprintf('Please navigate to the gcms-pipeline directory\n')
-    return
-end
+% Get database file name
+databaseFileName = p.Results.filename;
 
-if isfile(p.Results.filename)
+if isfile(databaseFileName)
     fprintf('Database file already exists\n')
     return
 end
 
-dbfile = p.Results.filename;
+% Create SQL database
+dbfile = databaseFileName;
 conn = sqlite(dbfile, 'create');
 
-samplesTextArray = readlines('./src/database/tables/samples_table_sql.txt');
+% Create samples table
+samplesTextArray = readlines(samplesTableFile);
 samplesText = strjoin(samplesTextArray);
 sqlquery = samplesText;
 execute(conn, sqlquery);
 
-peaksTextArray = readlines('./src/database/tables/peaks_table_sql.txt');
+% Create peaks table
+peaksTextArray = readlines(peaksTableFile);
 peaksText = strjoin(peaksTextArray);
 sqlquery = peaksText;
 execute(conn, sqlquery);
 
-libraryTextArray = readlines('./src/database/tables/library_table_sql.txt');
+% Create library table
+libraryTextArray = readlines(libraryTableFile);
 libraryText = strjoin(libraryTextArray);
 sqlquery = libraryText;
 execute(conn, sqlquery);
 
+% Close database
 close(conn)
-fprintf("Database created: " + p.Results.filename + "\n");
+
+databaseFileName = strrep(databaseFileName, '\', '\\');
+fprintf(['Database created: ', databaseFileName, '\n']);
