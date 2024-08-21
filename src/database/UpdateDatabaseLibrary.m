@@ -77,7 +77,7 @@ if ~skipDuplicateCheck
 
     if isempty(libraryData)
         status = 'no data';
-        fprintf('[ERROR] No samples to add\n');
+        fprintf('[ERROR] No peaks to add to library\n');
         return
     end
 

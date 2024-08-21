@@ -22,10 +22,3 @@ relevantRows = intensityArray(startInd: endInd, :);
 averageIntensitySpectra = mean(relevantRows);
 
 end
-
-
-
-
-
-
-

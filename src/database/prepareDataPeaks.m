@@ -78,7 +78,8 @@ for i=1:length(data(sampleRow).peaks)
         max = fetch(conn, query);
         db(i).library_id = max{1,1} + 1;
         db(i).match_score = 0;
-
+        
+        data(sampleRow).peaks(i).date_created = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
         peak = ExportNIST(data(sampleRow), i);
         peak = prepareDataLibrary(peak);
         UpdateDatabaseLibrary(database, peak);
