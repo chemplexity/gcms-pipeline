@@ -194,8 +194,9 @@ end
 % Filter unsupported files
 % ---------------------------------------
 [~,~,ext] = cellfun(@(x) fileparts(x), {file.Name}, 'uniformoutput', 0);
-
 file(cellfun(@(x) ~any(strcmpi(x, default.formats)), ext)) = [];
+
+file = FilterHiddenFiles(file);
 
 if isempty(file)
     status(option.verbose, 'selection_error');
@@ -310,7 +311,7 @@ switch varargin{2}
     case 'import'
         fprintf(['\n', repmat('-',1,50), '\n']);
         fprintf(' IMPORT');
-        fprintf(['\n', repmat('-',1,50), '\n\n']);
+        fprintf(['\n', repmat('-',1,50), '\n']);
         
     case 'java_error'
         fprintf([' STATUS  Unable to load file selection interface...', '\n']);
@@ -406,6 +407,25 @@ for i = 1:length(str)
     end
     
 end
+
+end
+
+% ---------------------------------------
+% Filter OSX files ('._FILENAME')
+% ---------------------------------------
+function file = FilterHiddenFiles(file)
+
+removeIndex = [];
+
+for i = 1:length(file)
+    [~, fileName, ~] = fileparts(file(i).Name);
+
+    if length(fileName) >= 2 && strcmpi(fileName(1:2), '._')
+        removeIndex = [removeIndex, i];
+    end
+end
+
+file(removeIndex) = [];
 
 end
 

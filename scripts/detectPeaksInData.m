@@ -234,20 +234,22 @@ for i = options.startIndex:options.endIndex
     % ---------------------------------------
     % Filter by signal to noise
     % ---------------------------------------
-    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', sampleName, ': calculating signal to noise...\n']);
-
-    data = getSignalToNoise(data, i);
-    removeIndex = [];
-
-    for j = 1:length(data(i).peaks)
-        if data(i).peaks(j).snr < options.minSignalToNoise
-            removeIndex(end+1) = j;
+    if options.minSignalToNoise > 0
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', sampleName, ': calculating signal to noise...\n']);
+    
+        data = getSignalToNoise(data, i);
+        removeIndex = [];
+    
+        for j = 1:length(data(i).peaks)
+            if data(i).peaks(j).snr < options.minSignalToNoise
+                removeIndex(end+1) = j;
+            end
         end
-    end
-
-    if ~isempty(data(i).peaks)
-        data(i).peaks(removeIndex) = [];
+    
+        if ~isempty(data(i).peaks)
+            data(i).peaks(removeIndex) = [];
+        end
     end
 
     % -----------------------------------------

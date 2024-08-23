@@ -11,7 +11,7 @@ function data = preprocessData(data, varargin)
 % ---------------------------------------
 default.timeStart          = [];
 default.timeEnd            = [];
-default.baselineSmoothness = 5E6;
+default.baselineSmoothness = 1E7;
 default.baselineAsymmetry  = 5E-3;
 default.startIndex         = 1;
 default.endIndex           = length(data);

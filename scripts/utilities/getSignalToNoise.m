@@ -30,10 +30,14 @@ for i = 1:length(peaks)
     noiseLeftX = noiseX(noiseFilter);
     noiseLeftY = noiseY(noiseFilter);
 
-    p = polyfit(noiseLeftX, noiseLeftY, 1);
-
-    noiseLeftCenterX = peaks(i).time;
-    noiseLeftCenterY = p(1) * noiseLeftCenterX + p(2);
+    if length(noiseLeftX) > 1
+        p = polyfit(noiseLeftX, noiseLeftY, 1);
+        noiseLeftCenterX = peaks(i).time;
+        noiseLeftCenterY = p(1) * noiseLeftCenterX + p(2);
+        peaks(i).snr =  peaks(i).ymax / noiseLeftCenterY;
+    else
+        peaks(i).snr = 0;
+    end
 
     % Right side noise
     noiseStart = peaks(i).xmax;
@@ -43,15 +47,20 @@ for i = 1:length(peaks)
     noiseRightX = noiseX(noiseFilter);
     noiseRightY = noiseY(noiseFilter);
 
-    p = polyfit(noiseRightX, noiseRightY, 1);
-    
-    noiseRightCenterX = peaks(i).time;
-    noiseRightCenterY = p(1) * noiseRightCenterX + p(2);
+    if length(noiseRightX) > 1
+        p = polyfit(noiseRightX, noiseRightY, 1);
+        noiseRightCenterX = peaks(i).time;
+        noiseRightCenterY = p(1) * noiseRightCenterX + p(2);
+        peaks(i).snr = max([(peaks(i).ymax / noiseRightCenterY), peaks(i).snr]);
+    end
 
-    % Calculate signal to noise
-    snrLeft = peaks(i).ymax / noiseLeftCenterY;
-    snrRight = peaks(i).ymax / noiseRightCenterY;
-    peaks(i).snr = mean([snrLeft, snrRight]);
+    if peaks(i).snr == 0
+        peaks(i).snr = peaks(i).ymax / peaks(i).ymin;
+    end
+    
+    if peaks(i).snr < 0
+        peaks(i).snr = 0;
+    end
     
 end
 
