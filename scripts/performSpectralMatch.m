@@ -92,6 +92,7 @@ end
 
 if ~isfield(data, 'peaks')
     fprintf('[ERROR] Data does not contain "peaks" field...\n');
+    return
 end
 
 for i = options.startIndex:options.endIndex
@@ -112,16 +113,15 @@ end
 
 % Input: library
 if numel(library) <= 0
-    fprintf('[ERROR] Library is empty...\n');
-    return
+    fprintf('[WARNING] Library is empty...\n');
 end
 
-if ~isfield(library, 'mz')
+if numel(library) > 0 && ~isfield(library, 'mz')
     fprintf('[ERROR] Library does not contain "mz" field...\n');
     return
 end
 
-if ~isfield(library, 'intensity')
+if numel(library) > 0 && ~isfield(library, 'intensity')
     fprintf('[ERROR] Library does not contain "intensity" field...\n');
     return
 end

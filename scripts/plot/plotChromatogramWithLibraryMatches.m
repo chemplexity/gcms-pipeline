@@ -26,7 +26,7 @@ options.line.color = [0.22,0.22,0.22];
 options.line.width = 1.25;
 
 % Get axes limits
-if isempty(data(sampleIndex).peaks)
+if isempty(data(sampleIndex).peaks) || sum([data(sampleIndex).peaks.match_score]) < 100
     xminPlot = min([data(sampleIndex).time]);
     xmaxPlot = max([data(sampleIndex).time]);
 else

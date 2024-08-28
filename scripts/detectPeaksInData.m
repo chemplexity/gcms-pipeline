@@ -114,7 +114,7 @@ for i = options.startIndex:options.endIndex
     % Baseline correction
     % ---------------------------------------
     if isfield(data, 'baseline')
-        data(i).intensity(:,1) = sum(data(i).intensity(:, 2:end) - data(i).baseline(:, 2:end), 2);
+        data(i).intensity(:,1) = sum(data(i).intensity(:, 2:end), 2) - data(i).baseline(:,1);% - data(i).baseline(:, 2:end), 2);
     end
 
     % ---------------------------------------
@@ -128,6 +128,21 @@ for i = options.startIndex:options.endIndex
         data(i).intensity(:, 1), ...
         'sensitivity', 75);
     
+
+    % -----------------------------------------
+    % Check for peaks 
+    % -----------------------------------------
+    if isempty(peakLocations)
+        processTime = toc(peakTime);
+        totalProcessTime = totalProcessTime + processTime;
+
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', sampleName, ': END']);
+        fprintf([' (', num2str(length(data(i).peaks)), ' peaks, ', parsetime(processTime), ')\n\n']);
+        
+        continue;
+    end
+        
     % ---------------------------------------
     % Filter unique peaks
     % ---------------------------------------
@@ -250,6 +265,10 @@ for i = options.startIndex:options.endIndex
         if ~isempty(data(i).peaks)
             data(i).peaks(removeIndex) = [];
         end
+    end
+
+    if isempty(data(i).peaks)
+        data(i).peaks = [];
     end
 
     % -----------------------------------------
