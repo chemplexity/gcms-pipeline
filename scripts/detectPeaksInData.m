@@ -213,6 +213,11 @@ for i = options.startIndex:options.endIndex
         peak.mz = data(i).channel(2:end);
         peak.intensity = data(i).intensity(timeIndex, 2:end);
 
+        % Apply baseline correction to peak intensity
+        if isfield(data, 'baseline') && length(data(i).baseline(1,:)) == length(data(i).channel)
+            peak.intensity = peak.intensity - data(i).baseline(timeIndex, 2:end);
+        end
+        
         % Filter by minMz and maxMz
         if options.minMz ~= -1
             mzFilter = peak.mz >= options.minMz;
@@ -226,11 +231,6 @@ for i = options.startIndex:options.endIndex
             peak.intensity = peak.intensity(mzFilter);
         end
 
-        % Apply baseline correction to peak intensity
-        if isfield(data, 'baseline') && length(data(i).baseline(1,:)) == length(data(i).channel)
-            peak.intensity = peak.intensity - data(i).baseline(timeIndex, 2:end);
-        end
-        
         % Normalize peak intensity and filter by minimum ion intensity
         peak.intensity = peak.intensity ./ max(peak.intensity);
 

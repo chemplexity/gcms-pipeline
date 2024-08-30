@@ -103,6 +103,7 @@ for i = 1:length(peaks)
         if strcmpi(compoundTextField, 'compound_ontology')
             if isempty(peaks(i).library_match)
                 faceColor = [0.7, 0.7, 0.7];
+                textColor = 'black';
             else
                 compoundOntology = peaks(i).library_match(1).compound_ontology;
                 colorIndex = strcmpi(compoundOntology, {compoundColors{:,1}});
@@ -130,10 +131,6 @@ for i = 1:length(peaks)
             continue;
         end
 
-        if strcmpi(compoundTextField, 'compound_ontology')
-            set(peakFill(end), 'displayname', upper(compoundOntology));
-        end
-
         if peaks(i).peakCenterY > peaks(i).height + peaks(i).ymin && ...
             peaks(i).peakCenterX >= peaks(i).xmin && ...
             peaks(i).peakCenterX <= peaks(i).xmax
@@ -159,7 +156,7 @@ for i = 1:length(peaks)
 
         scoreText = num2str(peaks(i).match_score, '%.1f');
         peakText = [compoundText, ' (', scoreText, ')'];
-
+       
         peakTextX = peakX;
         peakTextY = peakY + textPad;
 
