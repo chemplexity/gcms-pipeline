@@ -15,8 +15,11 @@ default.minPeakHeight    = 1E4;
 default.minPeakWidth     = 0.01;
 default.minIonIntensity  = 0.02;
 default.minSignalToNoise = 2;
+default.maxPeakOverlap   = 0.5;
 default.startIndex       = 1;
 default.endIndex         = length(data);
+default.minMz            = -1;
+default.maxMz            = -1;
 
 % ---------------------------------------
 % Input
@@ -28,8 +31,11 @@ addOptional(p, 'minPeakHeight', default.minPeakHeight)
 addOptional(p, 'minPeakWidth', default.minPeakWidth)
 addOptional(p, 'minIonIntensity', default.minIonIntensity);
 addOptional(p, 'minSignalToNoise', default.minSignalToNoise);
+addOptional(p, 'maxPeakOverlap', default.maxPeakOverlap);
 addOptional(p, 'startIndex', default.startIndex);
 addOptional(p, 'endIndex', default.endIndex);
+addOptional(p, 'minMz', default.minMz);
+addOptional(p, 'maxMz', default.maxMz);
 
 parse(p, varargin{:});
 
@@ -41,8 +47,11 @@ options.minPeakHeight    = p.Results.minPeakHeight;
 options.minPeakWidth     = p.Results.minPeakWidth;
 options.minIonIntensity  = p.Results.minIonIntensity;
 options.minSignalToNoise = p.Results.minSignalToNoise;
+options.maxPeakOverlap   = p.Results.maxPeakOverlap;
 options.startIndex       = p.Results.startIndex;
 options.endIndex         = p.Results.endIndex;
+options.minMz            = p.Results.minMz;
+options.maxMz            = p.Results.maxMz;
 
 % ---------------------------------------
 % Validate
@@ -89,11 +98,14 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 
 fprintf([' OPTIONS  startIndex       : ', num2str(options.startIndex), '\n']);
 fprintf([' OPTIONS  endIndex         : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  minMz            : ', num2str(options.minMz), '\n']);
+fprintf([' OPTIONS  maxMz            : ', num2str(options.maxMz), '\n']);
 fprintf([' OPTIONS  maxError         : ', num2str(options.maxError), '\n']);
 fprintf([' OPTIONS  minPeakHeight    : ', num2str(options.minPeakHeight), '\n']);
 fprintf([' OPTIONS  minPeakWidth     : ', num2str(options.minPeakWidth), '\n']);
 fprintf([' OPTIONS  minIonIntensity  : ', num2str(options.minIonIntensity), '\n']);
-fprintf([' OPTIONS  minSignalToNoise : ', num2str(options.minSignalToNoise), '\n\n']);
+fprintf([' OPTIONS  minSignalToNoise : ', num2str(options.minSignalToNoise), '\n']);
+fprintf([' OPTIONS  maxPeakOverlap   : ', num2str(options.maxPeakOverlap), '\n\n']);
 
 fprintf([' STATUS  Detecting peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
 totalProcessTime = 0;
@@ -113,8 +125,8 @@ for i = options.startIndex:options.endIndex
     % ---------------------------------------
     % Baseline correction
     % ---------------------------------------
-    if isfield(data, 'baseline')
-        data(i).intensity(:,1) = sum(data(i).intensity(:, 2:end), 2) - data(i).baseline(:,1);% - data(i).baseline(:, 2:end), 2);
+    if ~isfield(data, 'baseline') || isempty(data(i).baseline)
+        data(i).baseline = Baseline(data(i).intensity(:,1), 'smoothness', 1E7, 'asymmetry', 5E-4);
     end
 
     % ---------------------------------------
@@ -128,7 +140,6 @@ for i = options.startIndex:options.endIndex
         data(i).intensity(:, 1), ...
         'sensitivity', 75);
     
-
     % -----------------------------------------
     % Check for peaks 
     % -----------------------------------------
@@ -161,7 +172,8 @@ for i = options.startIndex:options.endIndex
             data(i).time, ...
             data(i).intensity(:, 1), ...
             peakLocations(j, 1), ...
-            'frequency', 500);
+            'frequency', 500, ...
+            'baseline', data(i).baseline(:,1));
         
         % Filter by error
         if peak.error > options.maxError
@@ -186,31 +198,45 @@ for i = options.startIndex:options.endIndex
         peak.peakCenterX = peakLocations(j, 1);
         peak.peakCenterY = peakLocations(j, 2);
 
-        % Get peak center
+        % Apply corrections to peak height
         if peak.peakCenterY > peak.height + peak.ymin && ...
             peak.peakCenterX >= peak.xmin && ...
             peak.peakCenterX <= peak.xmax
-            peakX = peak.peakCenterX;
-        else
-            peakX = peak.time;
+
+            peak.time = peak.peakCenterX;
+            peak.ymax = peak.peakCenterY;
+            peak.height = peak.ymax - peak.ymin;
         end
 
         % Add the mass spectra of each peak center
-        timeIndex = lookupTimeIndex(data(i).time, peakX);
+        timeIndex = lookupTimeIndex(data(i).time, peak.time);
         peak.mz = data(i).channel(2:end);
         peak.intensity = data(i).intensity(timeIndex, 2:end);
 
+        % Filter by minMz and maxMz
+        if options.minMz ~= -1
+            mzFilter = peak.mz >= options.minMz;
+            peak.mz = peak.mz(mzFilter);
+            peak.intensity = peak.intensity(mzFilter);
+        end
+
+        if options.maxMz ~= -1
+            mzFilter = peak.mz <= options.maxMz;
+            peak.mz = peak.mz(mzFilter);
+            peak.intensity = peak.intensity(mzFilter);
+        end
+
         % Apply baseline correction to peak intensity
-        if isfield(data, 'baseline')
+        if isfield(data, 'baseline') && length(data(i).baseline(1,:)) == length(data(i).channel)
             peak.intensity = peak.intensity - data(i).baseline(timeIndex, 2:end);
         end
         
         % Normalize peak intensity and filter by minimum ion intensity
         peak.intensity = peak.intensity ./ max(peak.intensity);
-        peakFilter = peak.intensity >= options.minIonIntensity;
 
-        peak.mz = peak.mz(peakFilter);
-        peak.intensity = peak.intensity(peakFilter);
+        intensityFilter = peak.intensity >= options.minIonIntensity;
+        peak.mz = peak.mz(intensityFilter);
+        peak.intensity = peak.intensity(intensityFilter);
 
         % Append peak to peak list
         peakList = [peakList, peak];
@@ -228,6 +254,7 @@ for i = options.startIndex:options.endIndex
             continue
         end
 
+        % Find exact matches first
         matches = [peakList.time] == peakList(j).time;
 
         % Keep lowest error peak among duplicates
@@ -244,6 +271,9 @@ for i = options.startIndex:options.endIndex
     end
 
     peakList(removeIndex) = [];
+
+    % Remove overlapping peaks
+    peakList = removeOverlappingPeaks(peakList, options.maxPeakOverlap);
     data(i).peaks = peakList;
 
     % ---------------------------------------
@@ -306,5 +336,85 @@ if x > 60
 else
     str = [num2str(x, '%.1f'), ' sec'];
 end
+
+end
+
+% ---------------------------------------
+% Find overlapping peaks
+% ---------------------------------------
+function peaks = removeOverlappingPeaks(peaks, maxOverlap)
+
+removeIndex = [];
+
+for i = 1:length(peaks)
+
+    % Get peak boundaries
+    a0 = peaks(i).xmin;
+    a1 = peaks(i).xmax;
+
+    b0 = [peaks.xmin];
+    b1 = [peaks.xmax];
+
+    matchIndex = i;
+
+    % Case 1 (Peak B starts within Peak A)
+    isOverlap = b0 >= a0 & b0 <= a1 & b1 > a1;
+
+    overlapIndex = find(isOverlap == 1);
+    overlapIndex(overlapIndex == i) = [];
+
+    for j = 1:length(overlapIndex)
+        peakSpan = a1 - a0;
+        peakOverlapSpan = a1 - peaks(overlapIndex(j)).xmin;
+
+        if peakOverlapSpan / peakSpan > maxOverlap
+            matchIndex(end+1) = overlapIndex(j);
+        end
+    end
+
+    % Case 2 (Peak B ends within Peak A)
+    isOverlap = b1 >= a0 & b1 <= a1 & b0 < a0;
+
+    overlapIndex = find(isOverlap == 1);
+    overlapIndex(overlapIndex == i) = [];
+
+    for j = 1:length(overlapIndex)
+        peakSpan = a1 - a0;
+        peakOverlapSpan = peaks(overlapIndex(j)).xmax - a0;
+
+        if peakOverlapSpan / peakSpan > maxOverlap
+            matchIndex(end+1) = overlapIndex(j);
+        end
+    end
+
+    % Case 3 (Peak B is entirely within Peak A)
+    isOverlap = b0 >= a0 & b0 <= a1 & b1 >= a0 & b1 <= a1;
+
+    overlapIndex = find(isOverlap == 1);
+    overlapIndex(overlapIndex == i) = [];
+
+    for j = 1:length(overlapIndex)
+        matchIndex(end+1) = overlapIndex(j);
+    end
+
+    % Remove overlapping peaks
+    matchIndex = unique(matchIndex);
+
+    if isscalar(matchIndex)
+        continue
+    end
+
+    % Keep lowest error peak
+    keepIndex = find([peaks(matchIndex).error] == min([peaks(matchIndex).error]));
+    keepIndex = keepIndex(1);
+
+    matchIndex(keepIndex) = [];
+    removeIndex = [removeIndex, matchIndex];
+
+end
+
+% Remove overlapping peaks
+removeIndex = unique(removeIndex);
+peaks(removeIndex) = [];
 
 end
