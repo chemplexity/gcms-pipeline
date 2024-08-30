@@ -216,6 +216,9 @@ for i = options.startIndex:options.endIndex
         % Apply baseline correction to peak intensity
         if isfield(data, 'baseline') && length(data(i).baseline(1,:)) == length(data(i).channel)
             peak.intensity = peak.intensity - data(i).baseline(timeIndex, 2:end);
+
+            % Remove negative values
+            peak.intensity(peak.intensity < 0) = 0;
         end
         
         % Filter by minMz and maxMz

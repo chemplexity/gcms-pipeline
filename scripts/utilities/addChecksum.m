@@ -12,10 +12,12 @@ for i = 1:size(data, 1)
     fullFileName = strcat(data(i).file_path, filesep, data(i).file_name);
     
     % Get MD5 checksum
-    data(i).checksum = GetFileChecksum(fullFileName, ...
+    fileChecksum = GetFileChecksum(fullFileName, ...
         'hash', 'MD5',...
         'verbose', false);
     
+    data(i).checksum = fileChecksum{1};
+
 end
 
 end

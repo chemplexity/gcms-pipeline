@@ -115,10 +115,6 @@ end
 % ---------------------------------------
 [m,n] = size(y);
 
-% Signal
-%yavg = mean(y);
-%ystd = std(y);
-
 % Baseline
 z = 0;
 b = zeros(m,n);
@@ -146,9 +142,6 @@ for i = 1:n
     if ~any(y(:,i)~=0)
         continue
     end
-    
-    % Filter signal
-    %y(abs(y(:,i)) > yavg(i) + ystd(i),i) = yavg(i);
     
     for j = 1:iterations
         

@@ -16,6 +16,9 @@ function [data, library] = performSpectralMatch(data, varargin)
 %   data -- data with peaks field
 %       struct
 %
+% ------------------------------------------------------------------------
+% Input (Optional)
+% ------------------------------------------------------------------------
 %   library -- NIST formatted library (from ImportNIST function)
 %       struct
 %
@@ -62,6 +65,7 @@ default.mzStep                   = 1;
 default.minPoints                = 5;
 default.startIndex               = 1;
 default.endIndex                 = -1;
+default.overrideExistingMatches  = true;
 default.addUnknownPeaksToLibrary = false;
 
 % ---------------------------------------
@@ -70,7 +74,7 @@ default.addUnknownPeaksToLibrary = false;
 p = inputParser;
 
 addRequired(p, 'data', @isstruct);
-addOptional(p, 'library', [], @isstruct);
+addOptional(p, 'library', getLibraryStructure(), @isstruct);
 
 addParameter(p, 'minScore', default.minScore);
 addParameter(p, 'minMz', default.minMz);
@@ -79,6 +83,7 @@ addParameter(p, 'mzStep', default.mzStep);
 addParameter(p, 'minPoints', default.minPoints);
 addParameter(p, 'startIndex', default.startIndex);
 addParameter(p, 'endIndex', default.endIndex);
+addParameter(p, 'overrideExistingMatches', default.overrideExistingMatches);
 addParameter(p, 'addUnknownPeaksToLibrary', default.addUnknownPeaksToLibrary);
 
 parse(p, data, varargin{:});
@@ -94,6 +99,7 @@ options.mzStep                   = p.Results.mzStep;
 options.minPoints                = p.Results.minPoints;
 options.startIndex               = p.Results.startIndex;
 options.endIndex                 = p.Results.endIndex;
+options.overrideExistingMatches  = p.Results.overrideExistingMatches;
 options.addUnknownPeaksToLibrary = p.Results.addUnknownPeaksToLibrary;
 
 % ---------------------------------------
@@ -129,7 +135,7 @@ end
 
 % Input: library
 if numel(library) <= 0
-    fprintf('[WARNING] Library is empty...\n');
+    library = getLibraryStructure();
 end
 
 if numel(library) > 0 && ~isfield(library, 'mz')
@@ -201,6 +207,7 @@ fprintf([' OPTIONS  minScore                 : ', num2str(options.minScore), '\n
 fprintf([' OPTIONS  minPoints                : ', num2str(options.minPoints), '\n']);
 fprintf([' OPTIONS  minMz                    : ', num2str(options.minMz), '\n']);
 fprintf([' OPTIONS  maxMz                    : ', num2str(options.maxMz), '\n']);
+fprintf([' OPTIONS  overrideExistingMatches  : ', num2str(options.overrideExistingMatches), '\n']);
 fprintf([' OPTIONS  addUnknownPeaksToLibrary : ', num2str(options.addUnknownPeaksToLibrary), '\n\n']);
 
 fprintf([' STATUS  Library contains ', num2str(length(library)), ' entries...\n']);
@@ -209,6 +216,7 @@ fprintf([' STATUS  Matching peaks in ', num2str(options.endIndex - options.start
 totalProcessTime = tic;
 totalPeaks = 0;
 totalMatches = 0;
+totalNewLibraryItems = 0;
 
 for i = options.startIndex:options.endIndex
 
@@ -229,6 +237,14 @@ for i = options.startIndex:options.endIndex
         continue
     end
 
+    % Check if fields exist
+    if ~isfield(data(i).peaks, 'match_score') || options.overrideExistingMatches
+        for j = 1:length(data(i).peaks)
+            data(i).peaks(j).library_match = [];
+            data(i).peaks(j).match_score = 0;
+        end
+    end
+
     totalPeaks = totalPeaks + length(data(i).peaks);
     peaksMz = {data(i).peaks.mz};
     peaksIntensity = {data(i).peaks.intensity};
@@ -236,36 +252,144 @@ for i = options.startIndex:options.endIndex
     % -----------------------------------------
     % Perform spectral matching on peaks
     % -----------------------------------------
-    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', sampleName, ': finding matches for ', num2str(length(peaksMz)), ' peaks...\n']);
+    if ~isempty(library)
 
-    matches = SpectralMatch( ...
-        peaksMz, ...
-        peaksIntensity, ...
-        library, ...
-        'num_matches', 5, ...
-        'min_score', options.minScore, ...
-        'minPoints', options.minPoints, ...
-        'min_mz', options.minMz, ...
-        'max_mz', options.maxMz, ...
-        'mz_step', options.mzStep);
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', sampleName, ': finding matches for ', num2str(length(peaksMz)), ' peaks...\n']);
     
-    % -----------------------------------------
-    % Update data with matches
-    % -----------------------------------------
-    numPeaksWithMatches = sum(cellfun(@(x) length(x), matches) > 0);
-    totalMatches = totalMatches + numPeaksWithMatches;
+        matches = SpectralMatch( ...
+            peaksMz, ...
+            peaksIntensity, ...
+            library, ...
+            'num_matches', 10, ...
+            'min_score', options.minScore, ...
+            'minPoints', options.minPoints, ...
+            'min_mz', options.minMz, ...
+            'max_mz', options.maxMz, ...
+            'mz_step', options.mzStep);
 
-    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', sampleName, ': found library matches for ', num2str(numPeaksWithMatches), ' peaks...\n']);
+        % -----------------------------------------
+        % Validate matches (no self-matching)
+        % -----------------------------------------
+        for j = 1:length(matches)
 
-    for j = 1:length(matches)
-        if isempty(matches{j})
-            data(i).peaks(j).library_match = [];
-            data(i).peaks(j).match_score = 0;
-        else
-            data(i).peaks(j).library_match = matches{j}(1);
-            data(i).peaks(j).match_score = matches{j}(1).score;
+            if ~isfield(data, 'checksum')
+                break
+            end
+
+            if isempty(matches{j,1})
+                continue
+            end
+
+            % Validate checksum does not match current file
+            fileChecksums = regexp({matches{j,1}.comments}, '(?:FileChecksum[:]\W)(\w*)', 'match');
+            removeIndex = [];
+
+            for k = 1:length(fileChecksums)
+
+                if isempty(fileChecksums{k})
+                    continue
+                end
+
+                fileChecksum = strsplit(fileChecksums{k}{1}, ': ');
+                fileChecksum = fileChecksum{end};
+
+                if strcmpi(data(i).checksum, fileChecksum)
+                    removeIndex(end+1) = k;
+                end
+
+            end
+
+            % Remove self matches 
+            matches{j,1}(removeIndex) = [];
+        end
+
+        % -----------------------------------------
+        % Boost matches close in retention time
+        % -----------------------------------------
+        options.matchTimeWindow = 0.1;
+
+        for j = 1:length(matches)
+
+            if length(matches{j,1}) <= 1
+                continue
+            end
+
+            targetTime = data(i).peaks(j).time;
+            matchIndex = [];
+
+            for k = 1:length(matches{j,1})
+                
+                if isempty(matches{j,1}(k).compound_retention_time)
+                    continue;
+                end
+
+                if abs(matches{j,1}(k).compound_retention_time - targetTime) <= options.matchTimeWindow
+                    matchIndex(end+1) = k;
+                end
+
+            end
+
+            % Sort retention time matches by score
+            timeMatches = matches{j,1}(matchIndex);
+            [~, scoreIndex] = sort([timeMatches.score], 'descend');
+            timeMatches = timeMatches(scoreIndex);
+
+            % Add closest retention time matches to top of stack
+            matches{j,1}(matchIndex) = [];
+            matches{j,1} = [timeMatches, matches{j,1}];
+        end
+
+        % -----------------------------------------
+        % Update data with matches
+        % -----------------------------------------
+        numPeaksWithMatches = sum(cellfun(@(x) length(x), matches) > 0);
+        totalMatches = totalMatches + numPeaksWithMatches;
+    
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', sampleName, ': found library matches for ', num2str(numPeaksWithMatches), ' peaks...\n']);
+    
+        for j = 1:length(matches)
+            if isempty(matches{j})
+                data(i).peaks(j).library_match = [];
+                data(i).peaks(j).match_score = 0;
+            else
+                data(i).peaks(j).library_match = matches{j}(1);
+                data(i).peaks(j).match_score = matches{j}(1).score;
+            end
+        end
+
+    end
+
+    % -----------------------------------------
+    % Add peaks without any matches to library
+    % -----------------------------------------
+    if options.addUnknownPeaksToLibrary == true
+        
+        % Count number of peaks without matches
+        numPeaksWithoutMatches = sum([data(i).peaks.match_score] == 0);
+
+        if numPeaksWithoutMatches > 0
+            
+            % Get index of peaks without matches
+            peakIndex = find([data(i).peaks.match_score] == 0);
+            libraryItems = [];
+
+            for j = 1:length(peakIndex)
+                libraryItems = [libraryItems; convertPeakToLibraryFormat(data, i, peakIndex(j))];
+            end
+
+            % Check if each new entry is a duplicate
+            libraryItems = checkLibraryForDuplicates(library, libraryItems);
+            
+            % Add new items to library
+            library = [library; libraryItems];
+            totalNewLibraryItems = totalNewLibraryItems + length(libraryItems);
+
+            if ~isempty(libraryItems)
+                fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+                fprintf([' ', sampleName, ': added new library entries for ', num2str(length(libraryItems)), ' peaks...\n']);    
+            end
         end
     end
 
@@ -276,7 +400,13 @@ end
 
 totalPeaks = num2str(totalPeaks);
 totalMatches = num2str(totalMatches);
+totalNewLibraryItems = num2str(totalNewLibraryItems);
 totalProcessTime = toc(totalProcessTime);
+
+if options.addUnknownPeaksToLibrary == true
+    fprintf([' STATUS  Library contains ', num2str(length(library)), ' entries...\n']);
+    fprintf([' STATUS  Added ', totalNewLibraryItems, ' new items to library...\n\n']);
+end
 
 fprintf([' STATUS  Total peaks   : ', totalPeaks, '\n']);
 fprintf([' STATUS  Total matches : ', totalMatches, '\n']);
@@ -298,5 +428,80 @@ if x > 60
 else
     str = [num2str(x, '%.1f'), ' sec'];
 end
+
+end
+
+% ---------------------------------------
+% Check library for duplicate entry
+% ---------------------------------------
+function libraryItems = checkLibraryForDuplicates(library, libraryItems)
+
+if isempty(library)
+    return
+end
+
+removeIndex = [];
+
+% Find and remove duplicates
+for i = 1:length(libraryItems)
+
+    % Check for matches in num_peaks first
+    potentialMatches = libraryItems(i).num_peaks == [library.num_peaks];
+    potentialMatches = library(potentialMatches);
+
+    % Check other fields for exact matches
+    isDuplicate = false;
+
+    for j = 1:length(potentialMatches)
+        
+        % Check file_name
+        if ~strcmpi(libraryItems(i).file_name, potentialMatches(j).file_name)
+            continue
+        end
+
+        % Check file_size
+        if libraryItems(i).file_size ~= potentialMatches(j).file_size
+            continue
+        end
+
+        % Check compound_name
+        if ~strcmpi(libraryItems(i).compound_name, potentialMatches(j).compound_name)
+            continue
+        end
+
+        % Check compound_retention_time
+        if libraryItems(i).compound_retention_time ~= potentialMatches(j).compound_retention_time
+            continue
+        end
+
+        % Check mz
+        if length(libraryItems(i).mz) ~= length(potentialMatches(j).mz)
+            continue
+        end
+
+        if ~all(libraryItems(i).mz == potentialMatches(j).mz)
+            continue
+        end
+
+        % Check intensity
+        if length(libraryItems(i).intensity) ~= length(potentialMatches(j).intensity)
+            continue
+        end
+
+        if ~all(libraryItems(i).intensity == potentialMatches(j).intensity)
+            continue
+        end
+
+        % Item is a duplicate
+        isDuplicate = true;
+        break
+    end
+
+    if isDuplicate
+        removeIndex(end+1) = i;
+    end
+end
+
+libraryItems(removeIndex) = [];
 
 end

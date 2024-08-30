@@ -114,7 +114,13 @@ for i = 1:length(peaks)
             if isempty(peaks(i).library_match)
                 faceColor = [0.93, 0.30, 0.30];
             else
-                faceColor = [0.30, peaks(i).match_score/100, 0.30];
+                matchScore = peaks(i).match_score;
+                
+                if matchScore >= 100
+                    matchScore = 99.99;
+                end
+
+                faceColor = [0.30, matchScore/100, 0.30];
             end
 
             textColor = 'black';

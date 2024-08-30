@@ -209,9 +209,9 @@ library(removeIndex) = [];
 % ---------------------------------------
 % Prepare library data
 % ---------------------------------------
-min_mz = min(cellfun(@(x) min(x), {library.mz}));
-max_mz = max(cellfun(@(x) max(x), {library.mz}));
-mz_span = max_mz - min_mz + 1;
+min_mz = floor(min(cellfun(@(x) min(x), {library.mz})));
+max_mz = ceil(max(cellfun(@(x) max(x), {library.mz})));
+mz_span = round(max_mz - min_mz + 1);
 
 library_mz = min_mz : options.mz_step : max_mz;
 library_intensity = zeros(length(library(:,1)), mz_span);
@@ -255,7 +255,7 @@ for i = 1:length(mz)
     if length(mz{i}) < options.minPoints
         continue;
     end
-    
+
     for j = 1:length(mz{i}(1,:))
         
         % Get index to transfer intensity value to
