@@ -209,13 +209,34 @@ for i = options.startIndex:options.endIndex
         end
 
         % Add the mass spectra of each peak center
-        timeIndex = lookupTimeIndex(data(i).time, peak.time);
+        peakHalfWindowSize = 3;
+        peakCenterIndex = lookupTimeIndex(data(i).time, peak.time);
+        peakStartIndex = peakCenterIndex - peakHalfWindowSize;
+        peakEndIndex = peakCenterIndex + peakHalfWindowSize;
+        
+        if peakStartIndex < 1 
+            peakStartIndex = 1;
+        end
+
+        if data(i).time(peakStartIndex) < peak.xmin
+            peakStartIndex = lookupTimeIndex(data(i).time, peak.xmin);
+        end
+
+        if peakEndIndex > length(data(i).time)
+            peakEndIndex = length(data(i).time);
+        end
+
+        if data(i).time(peakEndIndex) > peak.xmax
+            peakEndIndex = lookupTimeIndex(data(i).time, peak.xmax);
+        end
+
         peak.mz = data(i).channel(2:end);
-        peak.intensity = data(i).intensity(timeIndex, 2:end);
+        peak.intensity = sum(data(i).intensity(peakStartIndex:peakEndIndex, 2:end));
 
         % Apply baseline correction to peak intensity
         if isfield(data, 'baseline') && length(data(i).baseline(1,:)) == length(data(i).channel)
-            peak.intensity = peak.intensity - data(i).baseline(timeIndex, 2:end);
+            peakBaseline = sum(data(i).baseline(peakStartIndex:peakEndIndex, 2:end));
+            peak.intensity = peak.intensity - peakBaseline;
 
             % Remove negative values
             peak.intensity(peak.intensity < 0) = 0;

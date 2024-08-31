@@ -156,8 +156,8 @@ for i = 1:length(peaks)
         compoundText = strsplit(peaks(i).library_match(1).(compoundTextField), ';');
         compoundText = upper(compoundText{1});
         
-        if length(compoundText) > 20
-            compoundText = compoundText(1:20);
+        if length(compoundText) > 50
+            compoundText = compoundText(1:50);
         end
 
         scoreText = num2str(peaks(i).match_score, '%.1f');
