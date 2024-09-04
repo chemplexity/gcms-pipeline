@@ -71,6 +71,10 @@ options.min_intensity = p.Results.min_intensity;
 % ---------------------------------------
 
 % Input: library
+if isfield(library, 'library')
+    library = library.library;
+end
+
 if numel(library) <= 0
     return
 end
@@ -177,6 +181,11 @@ for i = 1:length(library)
         delete_index(end+1) = i;
         fprintf(['[STATUS] Removing row #', num2str(i), ' (', library(i).compound_formula, ')\n']);
     end
+
+    % Create new uuid for item if none exists
+    if isempty(library(i).db_id)
+        library(i).db_id = char(java.util.UUID.randomUUID.toString);
+    end
 end
 
 library(delete_index) = [];
@@ -190,3 +199,7 @@ data.min_mz = options.min_mz;
 data.max_mz = options.max_mz;
 data.min_points = options.min_points;
 data.min_intensity = options.min_intensity;
+
+fprintf([repmat('-',1,50), '\n']);
+fprintf(' EXIT');
+fprintf(['\n', repmat('-',1,50), '\n']);

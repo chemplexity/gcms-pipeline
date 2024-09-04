@@ -25,6 +25,12 @@ function [data, library] = performSpectralMatch(data, varargin)
 % ------------------------------------------------------------------------
 % Input (Name, Value)
 % ------------------------------------------------------------------------
+%   'startIndex' -- start index in data to process
+%       1 (default) | number
+%
+%   'endIndex' -- end index in data to process
+%       length(data) (default) | number
+%
 %   'minScore' -- minimum required match score (0 to 100)
 %       80 | number
 %
@@ -40,14 +46,17 @@ function [data, library] = performSpectralMatch(data, varargin)
 %   'minPoints' -- minimum number of points in peak spectrum to perform spectral matching
 %       5 (default) | number
 %
-%   'startIndex' -- start index in data to process
-%       1 (default) | number
-%
-%   'endIndex' -- end index in data to process
-%       length(data) (default) | number
-%
 %   'addUnknownPeaksToLibrary' -- add peaks with no matches to library
 %       false (default) | bool
+%
+%   'overrideExistingMatches' -- overwrite and ignore any existing matches
+%       true (default) | bool
+%
+%   'requireRetentionTimeMatch' -- require matches to also be within the retention time tolerance
+%       false (default) | bool
+%
+%   'retentionTimeTolerance' -- retention time tolerance window for matches
+%       0.1 (default) | float
 %
 % ------------------------------------------------------------------------
 % Examples
@@ -58,15 +67,17 @@ function [data, library] = performSpectralMatch(data, varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.minScore                 = 80;
-default.minMz                    = [];
-default.maxMz                    = [];
-default.mzStep                   = 1;
-default.minPoints                = 5;
-default.startIndex               = 1;
-default.endIndex                 = -1;
-default.overrideExistingMatches  = true;
-default.addUnknownPeaksToLibrary = false;
+default.startIndex                = 1;
+default.endIndex                  = -1;
+default.minScore                  = 80;
+default.minMz                     = [];
+default.maxMz                     = [];
+default.mzStep                    = 1;
+default.minPoints                 = 5;
+default.addUnknownPeaksToLibrary  = false;
+default.overrideExistingMatches   = true;
+default.requireRetentionTimeMatch = false;
+default.retentionTimeTolerance    = 0.1;
 
 % ---------------------------------------
 % Input
@@ -74,33 +85,37 @@ default.addUnknownPeaksToLibrary = false;
 p = inputParser;
 
 addRequired(p, 'data', @isstruct);
-addOptional(p, 'library', getLibraryStructure(), @isstruct);
+addOptional(p, 'library', getLibraryStructure());
 
+addParameter(p, 'startIndex', default.startIndex);
+addParameter(p, 'endIndex', default.endIndex);
 addParameter(p, 'minScore', default.minScore);
 addParameter(p, 'minMz', default.minMz);
 addParameter(p, 'maxMz', default.maxMz);
 addParameter(p, 'mzStep', default.mzStep);
 addParameter(p, 'minPoints', default.minPoints);
-addParameter(p, 'startIndex', default.startIndex);
-addParameter(p, 'endIndex', default.endIndex);
-addParameter(p, 'overrideExistingMatches', default.overrideExistingMatches);
 addParameter(p, 'addUnknownPeaksToLibrary', default.addUnknownPeaksToLibrary);
+addParameter(p, 'overrideExistingMatches', default.overrideExistingMatches);
+addParameter(p, 'requireRetentionTimeMatch', default.requireRetentionTimeMatch);
+addParameter(p, 'retentionTimeTolerance', default.retentionTimeTolerance);
 
 parse(p, data, varargin{:});
 
 % ---------------------------------------
 % Parse
 % ---------------------------------------
-library                          = p.Results.library;
-options.minScore                 = p.Results.minScore;
-options.minMz                    = p.Results.minMz;
-options.maxMz                    = p.Results.maxMz;
-options.mzStep                   = p.Results.mzStep;
-options.minPoints                = p.Results.minPoints;
-options.startIndex               = p.Results.startIndex;
-options.endIndex                 = p.Results.endIndex;
-options.overrideExistingMatches  = p.Results.overrideExistingMatches;
-options.addUnknownPeaksToLibrary = p.Results.addUnknownPeaksToLibrary;
+library                           = p.Results.library;
+options.startIndex                = p.Results.startIndex;
+options.endIndex                  = p.Results.endIndex;
+options.minScore                  = p.Results.minScore;
+options.minMz                     = p.Results.minMz;
+options.maxMz                     = p.Results.maxMz;
+options.mzStep                    = p.Results.mzStep;
+options.minPoints                 = p.Results.minPoints;
+options.addUnknownPeaksToLibrary  = p.Results.addUnknownPeaksToLibrary;
+options.overrideExistingMatches   = p.Results.overrideExistingMatches;
+options.requireRetentionTimeMatch = p.Results.requireRetentionTimeMatch;
+options.retentionTimeTolerance    = p.Results.retentionTimeTolerance;
 
 % ---------------------------------------
 % Validate
@@ -134,6 +149,10 @@ for i = options.startIndex:options.endIndex
 end
 
 % Input: library
+if isfield(library, 'library')
+    library = library.library;
+end
+
 if numel(library) <= 0
     library = getLibraryStructure();
 end
@@ -146,26 +165,6 @@ end
 if numel(library) > 0 && ~isfield(library, 'intensity')
     fprintf('[ERROR] Library does not contain "intensity" field...\n');
     return
-end
-
-% Parameter: 'minScore'
-if options.minScore < 0
-options.minScore = 0;
-end
-
-% Parameter: 'minMz'
-if ~isempty(options.minMz) && options.minMz < 0
-    options.minMz = [];
-end
-
-% Parameter: 'maxMz'
-if ~isempty(options.maxMz) && options.maxMz < 0
-    options.maxMz = [];
-end
-
-% Parameter: 'mzStep'
-if options.mzStep < 0
-    options.mzStep = 1;
 end
 
 % Parameter: 'startIndex'
@@ -194,6 +193,26 @@ if options.endIndex < options.startIndex
     options.endIndex = options.startIndex;
 end
 
+% Parameter: 'minScore'
+if options.minScore < 0
+    options.minScore = 0;
+end
+
+% Parameter: 'minMz'
+if ~isempty(options.minMz) && options.minMz < 0
+    options.minMz = [];
+end
+
+% Parameter: 'maxMz'
+if ~isempty(options.maxMz) && options.maxMz < 0
+    options.maxMz = [];
+end
+
+% Parameter: 'mzStep'
+if options.mzStep < 0
+    options.mzStep = 1;
+end
+
 % ---------------------------------------
 % Status
 % ---------------------------------------
@@ -201,14 +220,16 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' SPECTRAL MATCHING');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
-fprintf([' OPTIONS  startIndex               : ', num2str(options.startIndex), '\n']);
-fprintf([' OPTIONS  endIndex                 : ', num2str(options.endIndex), '\n']);
-fprintf([' OPTIONS  minScore                 : ', num2str(options.minScore), '\n']);
-fprintf([' OPTIONS  minPoints                : ', num2str(options.minPoints), '\n']);
-fprintf([' OPTIONS  minMz                    : ', num2str(options.minMz), '\n']);
-fprintf([' OPTIONS  maxMz                    : ', num2str(options.maxMz), '\n']);
-fprintf([' OPTIONS  overrideExistingMatches  : ', num2str(options.overrideExistingMatches), '\n']);
-fprintf([' OPTIONS  addUnknownPeaksToLibrary : ', num2str(options.addUnknownPeaksToLibrary), '\n\n']);
+fprintf([' OPTIONS  startIndex                : ', num2str(options.startIndex), '\n']);
+fprintf([' OPTIONS  endIndex                  : ', num2str(options.endIndex), '\n']);
+fprintf([' OPTIONS  minScore                  : ', num2str(options.minScore), '\n']);
+fprintf([' OPTIONS  minMz                     : ', num2str(options.minMz), '\n']);
+fprintf([' OPTIONS  maxMz                     : ', num2str(options.maxMz), '\n']);
+fprintf([' OPTIONS  minPoints                 : ', num2str(options.minPoints), '\n']);
+fprintf([' OPTIONS  addUnknownPeaksToLibrary  : ', bool2str(options.addUnknownPeaksToLibrary), '\n']);
+fprintf([' OPTIONS  overrideExistingMatches   : ', bool2str(options.overrideExistingMatches), '\n']);
+fprintf([' OPTIONS  requireRetentionTimeMatch : ', bool2str(options.requireRetentionTimeMatch), '\n']);
+fprintf([' OPTIONS  retentionTimeTolerance    : ', num2str(options.retentionTimeTolerance), '\n\n']);
 
 fprintf([' STATUS  Library contains ', num2str(length(library)), ' entries...\n']);
 fprintf([' STATUS  Matching peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
@@ -297,7 +318,6 @@ for i = options.startIndex:options.endIndex
                 if strcmpi(data(i).checksum, fileChecksum)
                     removeIndex(end+1) = k;
                 end
-
             end
 
             % Remove self matches 
@@ -305,13 +325,32 @@ for i = options.startIndex:options.endIndex
         end
 
         % -----------------------------------------
+        % Check if retention time is required
+        % -----------------------------------------
+        if options.requireRetentionTimeMatch
+            
+            % Remove any matches without a retention time
+            for j = 1:length(matches)
+                removeIndex = [];
+
+                for k = 1:length(matches{j,1})
+                    if isempty(matches{j,1}(k).compound_retention_time)
+                        removeIndex(end+1) = k;
+                    elseif matches{j,1}(k).compound_retention_time < 0
+                        removeIndex(end+1) = k;
+                    end
+                end
+
+                matches{j,1}(removeIndex) = [];
+            end
+        end
+
+        % -----------------------------------------
         % Boost matches close in retention time
         % -----------------------------------------
-        options.matchTimeWindow = 0.1;
-
         for j = 1:length(matches)
 
-            if length(matches{j,1}) <= 1
+            if isempty(matches{j,1})
                 continue
             end
 
@@ -324,7 +363,7 @@ for i = options.startIndex:options.endIndex
                     continue;
                 end
 
-                if abs(matches{j,1}(k).compound_retention_time - targetTime) <= options.matchTimeWindow
+                if abs(matches{j,1}(k).compound_retention_time - targetTime) <= options.retentionTimeTolerance
                     matchIndex(end+1) = k;
                 end
 
@@ -335,9 +374,21 @@ for i = options.startIndex:options.endIndex
             [~, scoreIndex] = sort([timeMatches.score], 'descend');
             timeMatches = timeMatches(scoreIndex);
 
+            if length(timeMatches) > 1
+                xxxx=1;
+            end
+
             % Add closest retention time matches to top of stack
-            matches{j,1}(matchIndex) = [];
-            matches{j,1} = [timeMatches, matches{j,1}];
+            if options.requireRetentionTimeMatch
+                matches{j,1} = timeMatches;
+
+                if isempty(matches{j,1})
+                    matches{j,1} = [];
+                end
+            else
+                matches{j,1}(matchIndex) = [];
+                matches{j,1} = [timeMatches, matches{j,1}];
+            end
         end
 
         % -----------------------------------------
@@ -375,8 +426,15 @@ for i = options.startIndex:options.endIndex
             peakIndex = find([data(i).peaks.match_score] == 0);
             libraryItems = [];
 
+            % Convert peak to library format
             for j = 1:length(peakIndex)
-                libraryItems = [libraryItems; convertPeakToLibraryFormat(data, i, peakIndex(j))];
+                libraryItem = convertPeakToLibraryFormat(data, i, peakIndex(j));
+                libraryItems = [libraryItems; libraryItem];
+
+                % Update peak data with self match
+                data(i).peaks(peakIndex(j)).library_match = libraryItem;
+                data(i).peaks(peakIndex(j)).library_match.score = 100;
+                data(i).peaks(peakIndex(j)).match_score = 100;
             end
 
             % Check if each new entry is a duplicate
@@ -430,6 +488,20 @@ else
 end
 
 end
+
+% ---------------------------------------
+% Convert boolean to string
+% ---------------------------------------
+function str = bool2str(bool)
+
+if bool
+    str = 'true';
+else
+    str = 'false';
+end
+
+end
+
 
 % ---------------------------------------
 % Check library for duplicate entry

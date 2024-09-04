@@ -137,6 +137,18 @@ end
 data(removeIndex) = [];
 
 % -----------------------------------------
+% Sort files by datetime
+% -----------------------------------------
+fileDatetime = [];
+
+for i = 1:length(data)
+    fileDatetime(end+1) = datenum(data(i).datetime, 'yyyy-mm-ddTHH:MM:SS');
+end
+
+[~, idx] = sort(fileDatetime);
+data = data(idx);
+
+% -----------------------------------------
 % Get MD5 checksums for files
 % -----------------------------------------
 fprintf(['\n STATUS  Caclulating MD5 checksums for ', num2str(length(data)), ' files...\n']);
