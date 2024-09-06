@@ -383,6 +383,12 @@ for i = 1:length(sampleIndex)
         plotYPad = (max(sampleIntensity{i,1}(sampleTimeFilter)) - min(sampleIntensity{i,1}(sampleTimeFilter))) * options.yPadding;
     end
 
+    if ~any(sampleTimeFilter)
+        plotYPad = 0;
+        plotYMin(end+1) = 0;
+        plotYMax(end+1) = 1;
+    end
+
     if isempty(plotYMin)
         plotYMin(end+1) = min(sampleIntensity{i,1}(sampleTimeFilter)) - plotYPad;
     end
