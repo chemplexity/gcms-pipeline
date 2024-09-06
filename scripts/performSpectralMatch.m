@@ -374,10 +374,6 @@ for i = options.startIndex:options.endIndex
             [~, scoreIndex] = sort([timeMatches.score], 'descend');
             timeMatches = timeMatches(scoreIndex);
 
-            if length(timeMatches) > 1
-                xxxx=1;
-            end
-
             % Add closest retention time matches to top of stack
             if options.requireRetentionTimeMatch
                 matches{j,1} = timeMatches;
@@ -456,6 +452,7 @@ for i = options.startIndex:options.endIndex
 
 end
 
+totalMatchesPercent = num2str(totalMatches/totalPeaks, '%.3f');
 totalPeaks = num2str(totalPeaks);
 totalMatches = num2str(totalMatches);
 totalNewLibraryItems = num2str(totalNewLibraryItems);
@@ -467,7 +464,7 @@ if options.addUnknownPeaksToLibrary == true
 end
 
 fprintf([' STATUS  Total peaks   : ', totalPeaks, '\n']);
-fprintf([' STATUS  Total matches : ', totalMatches, '\n']);
+fprintf([' STATUS  Total matches : ', totalMatches, ' (', totalMatchesPercent, ')\n']);
 fprintf([' STATUS  Total time    : ', parsetime(totalProcessTime), '\n']);
 
 fprintf([repmat('-',1,50), '\n']);

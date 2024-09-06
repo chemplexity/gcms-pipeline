@@ -16,6 +16,7 @@ default.minPeakWidth     = 0.01;
 default.minIonIntensity  = 0.02;
 default.minSignalToNoise = 2;
 default.maxPeakOverlap   = 0.5;
+default.peakSensitivity  = 200;
 default.startIndex       = 1;
 default.endIndex         = length(data);
 default.minMz            = -1;
@@ -26,16 +27,17 @@ default.maxMz            = -1;
 % ---------------------------------------
 p = inputParser;
 
-addOptional(p, 'maxError', default.maxError);
-addOptional(p, 'minPeakHeight', default.minPeakHeight)
-addOptional(p, 'minPeakWidth', default.minPeakWidth)
-addOptional(p, 'minIonIntensity', default.minIonIntensity);
-addOptional(p, 'minSignalToNoise', default.minSignalToNoise);
-addOptional(p, 'maxPeakOverlap', default.maxPeakOverlap);
-addOptional(p, 'startIndex', default.startIndex);
-addOptional(p, 'endIndex', default.endIndex);
-addOptional(p, 'minMz', default.minMz);
-addOptional(p, 'maxMz', default.maxMz);
+addParameter(p, 'maxError', default.maxError);
+addParameter(p, 'minPeakHeight', default.minPeakHeight)
+addParameter(p, 'minPeakWidth', default.minPeakWidth)
+addParameter(p, 'minIonIntensity', default.minIonIntensity);
+addParameter(p, 'minSignalToNoise', default.minSignalToNoise);
+addParameter(p, 'maxPeakOverlap', default.maxPeakOverlap);
+addParameter(p, 'peakSensitivity', default.peakSensitivity);
+addParameter(p, 'startIndex', default.startIndex);
+addParameter(p, 'endIndex', default.endIndex);
+addParameter(p, 'minMz', default.minMz);
+addParameter(p, 'maxMz', default.maxMz);
 
 parse(p, varargin{:});
 
@@ -48,6 +50,7 @@ options.minPeakWidth     = p.Results.minPeakWidth;
 options.minIonIntensity  = p.Results.minIonIntensity;
 options.minSignalToNoise = p.Results.minSignalToNoise;
 options.maxPeakOverlap   = p.Results.maxPeakOverlap;
+options.peakSensitivity  = p.Results.peakSensitivity;
 options.startIndex       = p.Results.startIndex;
 options.endIndex         = p.Results.endIndex;
 options.minMz            = p.Results.minMz;
@@ -65,6 +68,11 @@ end
 % Parameter: 'minPeakWidth'
 if options.minPeakWidth < 0
     options.minPeakWidth = default.minPeakWidth;
+end
+
+% Parameter: 'peakSensitivity'
+if options.peakSensitivity < 0
+    options.peakSensitivity = default.peakSensitivity;
 end
 
 % Parameter: 'startIndex'
@@ -105,6 +113,7 @@ fprintf([' OPTIONS  minPeakHeight    : ', num2str(options.minPeakHeight), '\n'])
 fprintf([' OPTIONS  minPeakWidth     : ', num2str(options.minPeakWidth), '\n']);
 fprintf([' OPTIONS  minIonIntensity  : ', num2str(options.minIonIntensity), '\n']);
 fprintf([' OPTIONS  minSignalToNoise : ', num2str(options.minSignalToNoise), '\n']);
+fprintf([' OPTIONS  peakSensitivity  : ', num2str(options.peakSensitivity), '\n']);
 fprintf([' OPTIONS  maxPeakOverlap   : ', num2str(options.maxPeakOverlap), '\n\n']);
 
 fprintf([' STATUS  Detecting peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
@@ -138,7 +147,7 @@ for i = options.startIndex:options.endIndex
     peakLocations = peakfindNN( ...
         data(i).time, ...
         data(i).intensity(:, 1), ...
-        'sensitivity', 75);
+        'sensitivity', options.peakSensitivity);
     
     % -----------------------------------------
     % Check for peaks 
