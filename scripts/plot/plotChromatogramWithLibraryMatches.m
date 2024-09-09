@@ -155,6 +155,7 @@ for i = 1:length(peaks)
         % Plot library match text
         compoundText = strsplit(peaks(i).library_match(1).(compoundTextField), ';');
         compoundText = upper(compoundText{1});
+        compoundText = strrep(compoundText, '_', '\_');
         
         if length(compoundText) > 50
             compoundText = compoundText(1:50);

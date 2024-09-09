@@ -85,7 +85,7 @@ default.retentionTimeTolerance    = 0.1;
 p = inputParser;
 
 addRequired(p, 'data', @isstruct);
-addOptional(p, 'library', getLibraryStructure());
+addOptional(p, 'library', getLibraryStructure(), @isstruct);
 
 addParameter(p, 'startIndex', default.startIndex);
 addParameter(p, 'endIndex', default.endIndex);
