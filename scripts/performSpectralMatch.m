@@ -69,9 +69,9 @@ function [data, library] = performSpectralMatch(data, varargin)
 % ---------------------------------------
 default.startIndex                = 1;
 default.endIndex                  = -1;
-default.minScore                  = 80;
 default.minMz                     = [];
 default.maxMz                     = [];
+default.minScore                  = 80;
 default.mzStep                    = 1;
 default.minPoints                 = 5;
 default.addUnknownPeaksToLibrary  = false;
@@ -89,9 +89,9 @@ addOptional(p, 'library', getLibraryStructure(), @isstruct);
 
 addParameter(p, 'startIndex', default.startIndex);
 addParameter(p, 'endIndex', default.endIndex);
-addParameter(p, 'minScore', default.minScore);
 addParameter(p, 'minMz', default.minMz);
 addParameter(p, 'maxMz', default.maxMz);
+addParameter(p, 'minScore', default.minScore);
 addParameter(p, 'mzStep', default.mzStep);
 addParameter(p, 'minPoints', default.minPoints);
 addParameter(p, 'addUnknownPeaksToLibrary', default.addUnknownPeaksToLibrary);
@@ -107,9 +107,9 @@ parse(p, data, varargin{:});
 library                           = p.Results.library;
 options.startIndex                = p.Results.startIndex;
 options.endIndex                  = p.Results.endIndex;
-options.minScore                  = p.Results.minScore;
 options.minMz                     = p.Results.minMz;
 options.maxMz                     = p.Results.maxMz;
+options.minScore                  = p.Results.minScore;
 options.mzStep                    = p.Results.mzStep;
 options.minPoints                 = p.Results.minPoints;
 options.addUnknownPeaksToLibrary  = p.Results.addUnknownPeaksToLibrary;
@@ -193,11 +193,6 @@ if options.endIndex < options.startIndex
     options.endIndex = options.startIndex;
 end
 
-% Parameter: 'minScore'
-if options.minScore < 0
-    options.minScore = 0;
-end
-
 % Parameter: 'minMz'
 if ~isempty(options.minMz) && options.minMz < 0
     options.minMz = [];
@@ -206,6 +201,11 @@ end
 % Parameter: 'maxMz'
 if ~isempty(options.maxMz) && options.maxMz < 0
     options.maxMz = [];
+end
+
+% Parameter: 'minScore'
+if options.minScore < 0
+    options.minScore = 0;
 end
 
 % Parameter: 'mzStep'
@@ -222,9 +222,9 @@ fprintf(['\n', repmat('-',1,50), '\n']);
 
 fprintf([' OPTIONS  startIndex                : ', num2str(options.startIndex), '\n']);
 fprintf([' OPTIONS  endIndex                  : ', num2str(options.endIndex), '\n']);
-fprintf([' OPTIONS  minScore                  : ', num2str(options.minScore), '\n']);
 fprintf([' OPTIONS  minMz                     : ', num2str(options.minMz), '\n']);
 fprintf([' OPTIONS  maxMz                     : ', num2str(options.maxMz), '\n']);
+fprintf([' OPTIONS  minScore                  : ', num2str(options.minScore), '\n']);
 fprintf([' OPTIONS  minPoints                 : ', num2str(options.minPoints), '\n']);
 fprintf([' OPTIONS  addUnknownPeaksToLibrary  : ', bool2str(options.addUnknownPeaksToLibrary), '\n']);
 fprintf([' OPTIONS  overrideExistingMatches   : ', bool2str(options.overrideExistingMatches), '\n']);
@@ -239,6 +239,9 @@ totalPeaks = 0;
 totalMatches = 0;
 totalNewLibraryItems = 0;
 
+% -----------------------------------------
+% Spectral matching
+% -----------------------------------------
 for i = options.startIndex:options.endIndex
 
     m = num2str(i);

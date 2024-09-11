@@ -94,6 +94,12 @@ else
     timeEndString = num2str(options.timeEnd);
 end
 
+if isempty(data)
+    numFiles = 0;
+else
+    numFiles = options.endIndex - options.startIndex + 1;
+end
+
 fprintf([' OPTIONS  applyTimeCrop      : ', bool2str(options.applyTimeCrop), '\n']);
 fprintf([' OPTIONS  applyCentroid      : ', bool2str(options.applyCentroid), '\n']);
 fprintf([' OPTIONS  applyBaseline      : ', bool2str(options.applyBaseline), '\n']);
@@ -104,8 +110,16 @@ fprintf([' OPTIONS  timeEnd            : ', timeEndString, '\n']);
 fprintf([' OPTIONS  baselineSmoothness : ', num2str(options.baselineSmoothness), '\n']);
 fprintf([' OPTIONS  baselineAsymmetry  : ', num2str(options.baselineAsymmetry), '\n\n']);
 
-fprintf([' STATUS  Preprocessing ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
+fprintf([' STATUS  Preprocessing ', num2str(numFiles), ' files...', '\n\n']);
 totalProcessTime = 0;
+
+if isempty(data)
+    fprintf([repmat('-',1,50), '\n']);
+    fprintf(' EXIT');
+    fprintf(['\n', repmat('-',1,50), '\n']);
+    
+    return
+end
 
 % -----------------------------------------
 % Preprocessing
