@@ -4,6 +4,10 @@ if ~isfield(data, 'peaks')
     return
 end
 
+minPoints = 10;
+windowMultiplier = 20;
+minWindowSize = 0.02 * windowMultiplier;
+
 x = data(sampleIndex).time;
 y = data(sampleIndex).intensity(:,1);
 
@@ -20,8 +24,13 @@ end
 
 for i = 1:length(peaks)
 
-    noiseWindow = peaks(i).width * 20;
+    peaks(i).snr = [];
+    noiseWindow = peaks(i).width * windowMultiplier;
 
+    if noiseWindow < minWindowSize
+        noiseWindow = minWindowSize;
+    end
+    
     % Left side noise
     noiseStart = peaks(i).xmin - noiseWindow;
     noiseEnd = peaks(i).xmin;
@@ -30,10 +39,19 @@ for i = 1:length(peaks)
     noiseLeftX = noiseX(noiseFilter);
     noiseLeftY = noiseY(noiseFilter);
 
-    p = polyfit(noiseLeftX, noiseLeftY, 1);
+    if length(noiseLeftX) >= minPoints
+        p = polyfit(noiseLeftX, noiseLeftY, 1);
+        
+        % Get peak signal value
+        peakLeftBaseline = p(1) * peaks(i).time + p(2);
+        peakSignal = peaks(i).ymax - peakLeftBaseline;
 
-    noiseLeftCenterX = peaks(i).time;
-    noiseLeftCenterY = p(1) * noiseLeftCenterX + p(2);
+        % Get noise value
+        noiseLeft = (max(noiseLeftY) - min(noiseLeftY)) / 2;
+        
+        % Get signal to noise ration
+        peaks(i).snr(end+1) = peakSignal / noiseLeft;
+    end
 
     % Right side noise
     noiseStart = peaks(i).xmax;
@@ -43,15 +61,26 @@ for i = 1:length(peaks)
     noiseRightX = noiseX(noiseFilter);
     noiseRightY = noiseY(noiseFilter);
 
-    p = polyfit(noiseRightX, noiseRightY, 1);
-    
-    noiseRightCenterX = peaks(i).time;
-    noiseRightCenterY = p(1) * noiseRightCenterX + p(2);
+    if length(noiseRightX) >= minPoints
+        p = polyfit(noiseRightX, noiseRightY, 1);
 
-    % Calculate signal to noise
-    snrLeft = peaks(i).ymax / noiseLeftCenterY;
-    snrRight = peaks(i).ymax / noiseRightCenterY;
-    peaks(i).snr = mean([snrLeft, snrRight]);
+        % Get peak signal value
+        peakRightBaseline = p(1) * peaks(i).time + p(2);
+        peakSignal = peaks(i).ymax - peakRightBaseline;
+        noiseRight = (max(noiseRightY) - min(noiseRightY)) / 2;
+
+        peaks(i).snr(end+1) = peakSignal / noiseRight;
+    end
+
+    peaks(i).snr = max(peaks(i).snr);
+
+    if isempty(peaks(i).snr)
+        peaks(i).snr = 0;
+    end
+
+    if peaks(i).snr < 0
+        peaks(i).snr = 0;
+    end
     
 end
 

@@ -194,8 +194,9 @@ end
 % Filter unsupported files
 % ---------------------------------------
 [~,~,ext] = cellfun(@(x) fileparts(x), {file.Name}, 'uniformoutput', 0);
-
 file(cellfun(@(x) ~any(strcmpi(x, default.formats)), ext)) = [];
+
+file = FilterHiddenFiles(file);
 
 if isempty(file)
     status(option.verbose, 'selection_error');
@@ -259,7 +260,7 @@ for i = 1:length(file)
         case {'all', 'default'}
             
             data(i,1) = parseinfo(f, data(i,1));
-            data(i,1) = parsedata(f, data(i,1), option);
+            data(i,1) = parsedata(f, data(i,1), option, i, length(file));
             
         case {'metadata', 'header'}
             
@@ -302,7 +303,10 @@ switch varargin{2}
         fprintf([' STATUS  No files found...', '\n']);
 
     case 'file_error_incomplete'
-        fprintf([' STATUS  File is incomplete, unable to import data...', '\n']);
+        fprintf([' File is incomplete, unable to import data...', '\n']);
+
+    case 'file_error_no_data'
+        fprintf([' File has no signal, unable to import data...', '\n']);
         
     case 'file_name'
         fprintf(' %s', varargin{3});
@@ -310,7 +314,7 @@ switch varargin{2}
     case 'import'
         fprintf(['\n', repmat('-',1,50), '\n']);
         fprintf(' IMPORT');
-        fprintf(['\n', repmat('-',1,50), '\n\n']);
+        fprintf(['\n', repmat('-',1,50), '\n']);
         
     case 'java_error'
         fprintf([' STATUS  Unable to load file selection interface...', '\n']);
@@ -406,6 +410,25 @@ for i = 1:length(str)
     end
     
 end
+
+end
+
+% ---------------------------------------
+% Filter OSX files ('._FILENAME')
+% ---------------------------------------
+function file = FilterHiddenFiles(file)
+
+removeIndex = [];
+
+for i = 1:length(file)
+    [~, fileName, ~] = fileparts(file(i).Name);
+
+    if length(fileName) >= 2 && strcmpi(fileName(1:2), '._')
+        removeIndex = [removeIndex, i];
+    end
+end
+
+file(removeIndex) = [];
 
 end
 
@@ -681,7 +704,7 @@ end
 % ---------------------------------------
 % File data
 % ---------------------------------------
-function data = parsedata(f, data, option)
+function data = parsedata(f, data, option, index, numFiles)
 
 if isempty(data.file_version)
     return
@@ -693,6 +716,7 @@ switch data.file_version
     case {'2'}
         
         if data.dir_offset >= data.file_size
+            status(option.verbose, 'loading_file', index, numFiles);
             status(option.verbose, 'file_error_incomplete');
             return
         end
@@ -710,8 +734,14 @@ switch data.file_version
     
     case {'2'}
         
-        data = fscan(f, data, data.data_offset);
+        [data, isError] = fscan(f, data, data.data_offset);
         
+        if isError
+            status(option.verbose, 'loading_file', index, numFiles);
+            status(option.verbose, 'file_error_no_data');
+            return
+        end
+
     case {'8', '30', '130'}
         
         data.intensity = fdelta(f, data.data_offset);
@@ -987,7 +1017,7 @@ end
 % ---------------------------------------
 % Data = mass spectra scan (quick)
 % ---------------------------------------
-function data = fscan(f, data, offset)
+function [data, isError] = fscan(f, data, offset)
 
 n = [];
 y = [];
@@ -996,6 +1026,14 @@ for i = 1:length(offset)
     fseek(f, offset(i)+12, 'bof');
     n(i,1) = fread(f, 1, 'int16', 4, 'b');
     y(:,end+1:end+n(i)) = fread(f, [2, n(i)], 'uint16', 'b');
+end
+
+% Check for errors
+if isempty(y)
+    isError = true;
+    return;
+else
+    isError = false;
 end
 
 % Mass values

@@ -9,36 +9,45 @@ function data = preprocessData(data, varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.timeStart          = [];
-default.timeEnd            = [];
-default.baselineSmoothness = 5E6;
-default.baselineAsymmetry  = 5E-3;
+default.applyTimeCrop      = false;
+default.applyCentroid      = true;
+default.applyBaseline      = false;
 default.startIndex         = 1;
 default.endIndex           = length(data);
+default.timeStart          = [];
+default.timeEnd            = [];
+default.baselineSmoothness = 1E7;
+default.baselineAsymmetry  = 5E-4;
 
 % ---------------------------------------
 % Input
 % ---------------------------------------
 p = inputParser;
 
-addOptional(p, 'timeStart', default.timeStart);
-addOptional(p, 'timeEnd', default.timeEnd)
-addOptional(p, 'baselineSmoothness', default.baselineSmoothness);
-addOptional(p, 'baselineAsymmetry', default.baselineAsymmetry);
+addOptional(p, 'applyTimeCrop', default.applyTimeCrop);
+addOptional(p, 'applyCentroid', default.applyCentroid);
+addOptional(p, 'applyBaseline', default.applyBaseline);
 addOptional(p, 'startIndex', default.startIndex);
 addOptional(p, 'endIndex', default.endIndex);
+addOptional(p, 'timeStart', default.timeStart);
+addOptional(p, 'timeEnd', default.timeEnd);
+addOptional(p, 'baselineSmoothness', default.baselineSmoothness);
+addOptional(p, 'baselineAsymmetry', default.baselineAsymmetry);
 
 parse(p, varargin{:});
 
 % ---------------------------------------
 % Parse
 % ---------------------------------------
+options.applyTimeCrop      = p.Results.applyTimeCrop;
+options.applyCentroid      = p.Results.applyCentroid;
+options.applyBaseline      = p.Results.applyBaseline;
+options.startIndex         = p.Results.startIndex;
+options.endIndex           = p.Results.endIndex;
 options.timeStart          = p.Results.timeStart;
 options.timeEnd            = p.Results.timeEnd;
 options.baselineSmoothness = p.Results.baselineSmoothness;
 options.baselineAsymmetry  = p.Results.baselineAsymmetry;
-options.startIndex         = p.Results.startIndex;
-options.endIndex           = p.Results.endIndex;
 
 % ---------------------------------------
 % Validate
@@ -85,6 +94,9 @@ else
     timeEndString = num2str(options.timeEnd);
 end
 
+fprintf([' OPTIONS  applyTimeCrop      : ', bool2str(options.applyTimeCrop), '\n']);
+fprintf([' OPTIONS  applyCentroid      : ', bool2str(options.applyCentroid), '\n']);
+fprintf([' OPTIONS  applyBaseline      : ', bool2str(options.applyBaseline), '\n']);
 fprintf([' OPTIONS  startIndex         : ', num2str(options.startIndex), '\n']);
 fprintf([' OPTIONS  endIndex           : ', num2str(options.endIndex), '\n']);
 fprintf([' OPTIONS  timeStart          : ', timeStartString, '\n']);
@@ -122,34 +134,44 @@ for i = options.startIndex:options.endIndex
     else
         timeEnd = options.timeEnd;
     end
-   
-    data(i) = cropDataByTimeRange(data(i), timeStart, timeEnd);
+
+    if options.applyTimeCrop
+        data(i) = cropDataByTimeRange(data(i), timeStart, timeEnd);
+    end
 
     % -----------------------------------------
     % Centroid mass spectra
     % -----------------------------------------
-    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', sampleName, ': centroiding...']);
-    fprintf([' (', num2str(length(data(i).time)), 'x', num2str(length(data(i).channel)), ')\n']);
+    if options.applyCentroid
 
-    channelWithoutTic = data(i).channel(:, 2:end);
-    intensityWithoutTic = data(i).intensity(:, 2:end);
-
-    [centroidedChannel, centroidedIntensity] = Centroid(channelWithoutTic, intensityWithoutTic);
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', sampleName, ': centroiding...']);
+        fprintf([' (', num2str(length(data(i).time)), 'x', num2str(length(data(i).channel)), ')\n']);
     
-    data(i).channel = [data(i).channel(:, 1), centroidedChannel];
-    data(i).intensity = [data(i).intensity(:, 1), centroidedIntensity];
+        channelWithoutTic = data(i).channel(:, 2:end);
+        intensityWithoutTic = data(i).intensity(:, 2:end);
+    
+        [centroidedChannel, centroidedIntensity] = Centroid(channelWithoutTic, intensityWithoutTic);
+        
+        data(i).channel = [data(i).channel(:, 1), centroidedChannel];
+        data(i).intensity = [data(i).intensity(:, 1), centroidedIntensity];
+
+    end
 
     % -----------------------------------------
     % Baseline correction on all chromatograms
     % -----------------------------------------
-    fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
-    fprintf([' ', sampleName, ': calculating baselines...']);
-    fprintf([' (', num2str(length(data(i).time)), 'x', num2str(length(data(i).channel)), ')\n']);
+    if options.applyBaseline
 
-    data(i).baseline = Baseline(data(i).intensity, ...
-        'smoothness', options.baselineSmoothness, ...
-        'asymmetry', options.baselineAsymmetry);
+        fprintf([' [', [repmat('0', 1, length(n) - length(m)), m], '/', n, ']']);
+        fprintf([' ', sampleName, ': calculating baselines...']);
+        fprintf([' (', num2str(length(data(i).time)), 'x', num2str(length(data(i).channel)), ')\n']);
+    
+        data(i).baseline = Baseline(data(i).intensity, ...
+            'smoothness', options.baselineSmoothness, ...
+            'asymmetry', options.baselineAsymmetry);
+    
+    end
 
     % -----------------------------------------
     % Status
@@ -182,6 +204,19 @@ if x > 60
     str = [num2str(x/60, '%.1f'), ' min'];
 else
     str = [num2str(x, '%.1f'), ' sec'];
+end
+
+end
+
+% ---------------------------------------
+% Convert boolean to string
+% ---------------------------------------
+function str = bool2str(bool)
+
+if bool
+    str = 'true';
+else
+    str = 'false';
 end
 
 end

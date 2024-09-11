@@ -26,7 +26,7 @@ options.line.color = [0.22,0.22,0.22];
 options.line.width = 1.25;
 
 % Get axes limits
-if isempty(data(sampleIndex).peaks)
+if isempty(data(sampleIndex).peaks) || sum([data(sampleIndex).peaks.match_score]) <= 100
     xminPlot = min([data(sampleIndex).time]);
     xmaxPlot = max([data(sampleIndex).time]);
 else
@@ -103,6 +103,7 @@ for i = 1:length(peaks)
         if strcmpi(compoundTextField, 'compound_ontology')
             if isempty(peaks(i).library_match)
                 faceColor = [0.7, 0.7, 0.7];
+                textColor = 'black';
             else
                 compoundOntology = peaks(i).library_match(1).compound_ontology;
                 colorIndex = strcmpi(compoundOntology, {compoundColors{:,1}});
@@ -113,7 +114,13 @@ for i = 1:length(peaks)
             if isempty(peaks(i).library_match)
                 faceColor = [0.93, 0.30, 0.30];
             else
-                faceColor = [0.30, peaks(i).match_score/100, 0.30];
+                matchScore = peaks(i).match_score;
+                
+                if matchScore >= 100
+                    matchScore = 99.99;
+                end
+
+                faceColor = [0.30, matchScore/100, 0.30];
             end
 
             textColor = 'black';
@@ -128,10 +135,6 @@ for i = 1:length(peaks)
         
         if isempty(peaks(i).library_match)
             continue;
-        end
-
-        if strcmpi(compoundTextField, 'compound_ontology')
-            set(peakFill(end), 'displayname', upper(compoundOntology));
         end
 
         if peaks(i).peakCenterY > peaks(i).height + peaks(i).ymin && ...
@@ -152,14 +155,15 @@ for i = 1:length(peaks)
         % Plot library match text
         compoundText = strsplit(peaks(i).library_match(1).(compoundTextField), ';');
         compoundText = upper(compoundText{1});
+        compoundText = strrep(compoundText, '_', '\_');
         
-        if length(compoundText) > 20
-            compoundText = compoundText(1:20);
+        if length(compoundText) > 50
+            compoundText = compoundText(1:50);
         end
 
         scoreText = num2str(peaks(i).match_score, '%.1f');
         peakText = [compoundText, ' (', scoreText, ')'];
-
+       
         peakTextX = peakX;
         peakTextY = peakY + textPad;
 

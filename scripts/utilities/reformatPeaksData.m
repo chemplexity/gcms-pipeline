@@ -4,11 +4,11 @@ function peaksData = reformatPeaksData(data)
 peaksFields = {
     'sample_index', 'peak_index', 'file_path', 'file_name', 'file_size', 'file_checksum', ...
     'sample_name', 'sample_info', 'method_name', 'operator', 'instrument', 'vial', ...
-    'sampling_rate', 'time', 'width', 'height', 'area', 'areaOf', 'fit', 'error', ...
-    'xmin', 'xmax', 'ymin', 'ymax', 'runtime', 'model', 'revision', ...
-    'peakCenterX', 'peakCenterY', 'mz', 'intensity', 'match_score', ...
-    'match_file_name', 'match_compound_name', 'match_compound_ontology', 'match_compound_formula',...
-    'match_compound_exact_mass', 'match_num_peaks', 'match_mz', 'match_intensity'};
+    'sampling_rate', 'time', 'width', 'height', 'area', 'areaOf', 'fit', 'error', 'snr', ...
+    'xmin', 'xmax', 'ymin', 'ymax', 'model', 'revision', 'peakCenterX', 'peakCenterY', ...
+    'mz', 'intensity', 'match_score', 'match_file_name', 'match_compound_name', ...
+    'match_compound_ontology', 'match_compound_formula', 'match_compound_retention_time', ...
+    'match_compound_exact_mass', 'match_db_id', 'match_comments', 'match_num_peaks', 'match_mz', 'match_intensity'};
 
 peaksData = struct();
 
@@ -55,7 +55,6 @@ for i = 1:length(data)
         peaksData(end,1).xmax = data(i).peaks(j).xmax;
         peaksData(end,1).ymin = data(i).peaks(j).ymin;
         peaksData(end,1).ymax = data(i).peaks(j).ymax;
-        peaksData(end,1).runtime = data(i).peaks(j).runtime;
         peaksData(end,1).model = data(i).peaks(j).model;
         peaksData(end,1).revision = data(i).peaks(j).revision;
         peaksData(end,1).peakCenterX = data(i).peaks(j).peakCenterX;
@@ -63,6 +62,10 @@ for i = 1:length(data)
         peaksData(end,1).mz = data(i).peaks(j).mz;
         peaksData(end,1).intensity = data(i).peaks(j).intensity;
         peaksData(end,1).match_score = data(i).peaks(j).match_score;
+
+        if isfield(data(i).peaks, 'snr')
+            peaksData(end,1).snr = data(i).peaks(j).snr;
+        end
         
         % Add match data
         if isempty(data(i).peaks(j).library_match)
@@ -72,8 +75,11 @@ for i = 1:length(data)
         peaksData(end,1).match_file_name = data(i).peaks(j).library_match(1).file_name;
         peaksData(end,1).match_compound_name = data(i).peaks(j).library_match(1).compound_name;
         peaksData(end,1).match_compound_ontology = data(i).peaks(j).library_match(1).compound_ontology;
+        peaksData(end,1).match_compound_retention_time = data(i).peaks(j).library_match(1).compound_retention_time;
         peaksData(end,1).match_compound_formula = data(i).peaks(j).library_match(1).compound_formula;
         peaksData(end,1).match_compound_exact_mass = data(i).peaks(j).library_match(1).compound_exact_mass;
+        peaksData(end,1).match_db_id = data(i).peaks(j).library_match(1).db_id;
+        peaksData(end,1).match_comments = data(i).peaks(j).library_match(1).comments;
         peaksData(end,1).match_num_peaks = data(i).peaks(j).library_match(1).num_peaks;
         peaksData(end,1).match_mz = data(i).peaks(j).library_match(1).mz;
         peaksData(end,1).match_intensity = data(i).peaks(j).library_match(1).intensity;

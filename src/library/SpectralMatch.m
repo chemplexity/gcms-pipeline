@@ -31,6 +31,9 @@ function matches = SpectralMatch(varargin)
 %   'min_score' -- minimum required match score (0 to 100)
 %       0 | number
 %
+%   'minPoints' -- minimum number of points in peak spectrum to perform spectral matching
+%       5 (default) | number
+%
 %   'min_mz' -- minimum m/z to perform spectral matching
 %       empty (default) | number
 %
@@ -51,10 +54,11 @@ function matches = SpectralMatch(varargin)
 % Defaults
 % ---------------------------------------
 default.num_matches = 5;
-default.min_score = 0;
-default.min_mz = [];
-default.max_mz = [];
-default.mz_step = 1;
+default.min_score   = 0;
+default.minPoints   = 5;
+default.min_mz      = [];
+default.max_mz      = [];
+default.mz_step     = 1;
 
 % ---------------------------------------
 % Input
@@ -67,6 +71,7 @@ addRequired(p, 'library', @isstruct);
 
 addParameter(p, 'num_matches', default.num_matches);
 addParameter(p, 'min_score', default.min_score);
+addParameter(p, 'minPoints', default.minPoints);
 addParameter(p, 'min_mz', default.min_mz);
 addParameter(p, 'max_mz', default.max_mz);
 addParameter(p, 'mz_step', default.mz_step);
@@ -82,6 +87,7 @@ library   = p.Results.library;
 
 options.num_matches = p.Results.num_matches;
 options.min_score   = p.Results.min_score;
+options.minPoints   = p.Results.minPoints;
 options.min_mz      = p.Results.min_mz;
 options.max_mz      = p.Results.max_mz;
 options.mz_step     = p.Results.mz_step;
@@ -147,6 +153,11 @@ if options.min_score < 0
     options.min_score = 0;
 end
 
+% Parameter: 'minPoints'
+if options.minPoints < 0
+    options.minPoints = 0;
+end
+
 % Parameter: 'min_mz'
 if ~isempty(options.min_mz) && options.min_mz < 0
     options.min_mz = [];
@@ -198,9 +209,9 @@ library(removeIndex) = [];
 % ---------------------------------------
 % Prepare library data
 % ---------------------------------------
-min_mz = min(cellfun(@(x) min(x), {library.mz}));
-max_mz = max(cellfun(@(x) max(x), {library.mz}));
-mz_span = max_mz - min_mz + 1;
+min_mz = floor(min(cellfun(@(x) min(x), {library.mz})));
+max_mz = ceil(max(cellfun(@(x) max(x), {library.mz})));
+mz_span = round(max_mz - min_mz + 1);
 
 library_mz = min_mz : options.mz_step : max_mz;
 library_intensity = zeros(length(library(:,1)), mz_span);
@@ -239,6 +250,12 @@ user_intensity = zeros(length(mz), length(library_mz));
 
 % Bin user data by m/z
 for i = 1:length(mz)
+
+    % Check number of points
+    if length(mz{i}) < options.minPoints
+        continue;
+    end
+
     for j = 1:length(mz{i}(1,:))
         
         % Get index to transfer intensity value to

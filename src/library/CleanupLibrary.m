@@ -1,4 +1,4 @@
-function library = CleanupLibrary(varargin)
+function data = CleanupLibrary(varargin)
 % ------------------------------------------------------------------------
 % Method      : CleanupLibrary
 % Description : Remove errors and incorrect items from NIST library
@@ -37,9 +37,10 @@ function library = CleanupLibrary(varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
-default.min_points = 5;
-default.min_mz = [];
-default.max_mz = [];
+default.min_points    = 5;
+default.min_mz        = [];
+default.max_mz        = [];
+default.min_intensity = 0.01;
 
 % ---------------------------------------
 % Input
@@ -51,6 +52,7 @@ addRequired(p, 'library', @isstruct);
 addParameter(p, 'min_points', default.min_points, @isscalar);
 addParameter(p, 'min_mz', default.min_mz, @isscalar);
 addParameter(p, 'max_mz', default.max_mz, @isscalar);
+addParameter(p, 'min_intensity', default.min_intensity, @isscalar);
 
 parse(p, varargin{:});
 
@@ -62,13 +64,17 @@ library = p.Results.library;
 options.min_points    = p.Results.min_points;
 options.min_mz        = p.Results.min_mz;
 options.max_mz        = p.Results.max_mz;
-options.min_intensity = 0.02;
+options.min_intensity = p.Results.min_intensity;
 
 % ---------------------------------------
 % Validate
 % ---------------------------------------
 
 % Input: library
+if isfield(library, 'library')
+    library = library.library;
+end
+
 if numel(library) <= 0
     return
 end
@@ -94,6 +100,15 @@ end
 % Parameter: 'max_mz'
 if ~isempty(options.max_mz) && options.max_mz < 0
     options.max_mz = [];
+end
+
+% Parameter: 'min_intensity'
+if isempty(options.min_intensity)
+    options.min_intensity = default.min_intensity;
+end
+
+if options.min_intensity >= 100
+    options.min_intensity = options.min_intensity / 100;
 end
 
 % ---------------------------------------
@@ -125,10 +140,10 @@ end
 % Remove library entries by # of points
 % ---------------------------------------
 fprintf(['\n', repmat('-',1,50), '\n']);
-fprintf(' Cleanup Library');
+fprintf(' CLEANUP LIBRARY');
 fprintf(['\n', repmat('-',1,50), '\n']);
 
-fprintf('[STATUS] Removing entries...\n\n');
+fprintf('[STATUS] Validating entries...\n\n');
 
 delete_index = [];
 
@@ -151,14 +166,40 @@ for i = 1:length(library)
         fprintf(['[STATUS] Removing row #', num2str(i), ' (NaN)\n']);
     end
 
-    % Remove any spectra named 'Z ARTIFACT'
-    if strcmpi(library(i).compound_name, 'Z ARTIFACT')
+    % Remove any spectra with invalid names
+    invalidNames = {'Z artifact'};
+
+    if any(strcmpi(library(i).compound_formula, invalidNames))
         delete_index(end+1) = i;
-        fprintf(['[STATUS] Removing row #', num2str(i), ' (Z ARTIFACT)\n']);
+        fprintf(['[STATUS] Removing row #', num2str(i), ' (', library(i).compound_formula, ')\n']);
     end
 
+    % Remove any spectra with invalid formula
+    invalidFormula = {'SMILES: N/A', 'NA', 'Like tag compound', 'Labeled compound', 'Contaminated compound'};
+
+    if any(strcmpi(library(i).compound_formula, invalidFormula))
+        delete_index(end+1) = i;
+        fprintf(['[STATUS] Removing row #', num2str(i), ' (', library(i).compound_formula, ')\n']);
+    end
+
+    % Create new uuid for item if none exists
+    if isempty(library(i).db_id)
+        library(i).db_id = char(java.util.UUID.randomUUID.toString);
+    end
 end
 
 library(delete_index) = [];
 
 fprintf(['\n[STATUS] Total rows removed: ', num2str(length(delete_index)), '\n']);
+
+% Output format
+data = struct();
+data.library = library;
+data.min_mz = options.min_mz;
+data.max_mz = options.max_mz;
+data.min_points = options.min_points;
+data.min_intensity = options.min_intensity;
+
+fprintf([repmat('-',1,50), '\n']);
+fprintf(' EXIT');
+fprintf(['\n', repmat('-',1,50), '\n']);

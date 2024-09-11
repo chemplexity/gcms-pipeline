@@ -95,7 +95,12 @@ for i = 1:size(data,1)
         if length(matchIndex) >= 1
             for j = 1:length(matchIndex)
                 for k = 1:length(checkFields)
-                    if data(matchIndex).(checkFields{k}) ~= data(i).(checkFields{k})
+                    if ischar(data(i).(checkFields{k}))
+                        if all(~strcmpi({data(matchIndex).(checkFields{k})}, data(i).(checkFields{k})))
+                            isDuplicate = false;
+                            break;
+                        end
+                    elseif all([data(matchIndex).(checkFields{k})] ~= data(i).(checkFields{k}))
                         isDuplicate = false;
                         break;
                     end
@@ -130,6 +135,18 @@ end
 % Remove invalid files
 % -----------------------------------------
 data(removeIndex) = [];
+
+% -----------------------------------------
+% Sort files by datetime
+% -----------------------------------------
+fileDatetime = [];
+
+for i = 1:length(data)
+    fileDatetime(end+1) = datenum(data(i).datetime, 'yyyy-mm-ddTHH:MM:SS');
+end
+
+[~, idx] = sort(fileDatetime);
+data = data(idx);
 
 % -----------------------------------------
 % Get MD5 checksums for files
