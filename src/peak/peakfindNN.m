@@ -168,6 +168,7 @@ end
 
 function peaks = prepareOutput(x, y, peaks, ymin, ymax, options)
 
+% Rescale intensity back to original
 peaks(:,2) = (peaks(:,2) ./ options.sensitivity) .* (ymax-ymin) + ymin;
 
 if ~isempty(peaks) && ~isempty(options.ymin)
@@ -178,13 +179,19 @@ if ~isempty(peaks) && ~isempty(options.ymax)
     peaks(peaks(:,2) - ymin > options.ymax, :) = [];
 end
 
+% Get peak center and peak height
 for i = 1:length(peaks(:,1))
     
     xi = find(x >= peaks(i,1), 1);
+
+    % Check previous index
+    if xi > 1 && abs(peaks(i,1) - x(xi-1)) < abs(peaks(i,1) - x(xi))
+        xi = xi - 1;
+    end
     
     if ~isempty(xi)
         
-        xpad = 10;
+        xpad = 3;
         
         if length(y) >= xi + xpad && xi - xpad >= 1
             [~, idx] = max(y(xi-xpad:xi+xpad));
@@ -197,6 +204,10 @@ for i = 1:length(peaks(:,1))
     end
     
 end
+
+% Filter peaks with unique retention times
+[~, idx] = unique(peaks(:,1));
+peaks = peaks(idx,:);
 
 end
 
