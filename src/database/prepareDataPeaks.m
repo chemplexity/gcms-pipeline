@@ -1,4 +1,4 @@
-function data = prepareDataPeaks(database, data, sampleRow)
+function data = prepareDataPeaks(database, data, sampleRow, varargin)
 
 % ------------------------------------------------------------------------
 % Method      : prepareDataPeaks()
@@ -7,21 +7,47 @@ function data = prepareDataPeaks(database, data, sampleRow)
 % names
 % ------------------------------------------------------------------------
 
+% ---------------------------------------
+% Defaults
+% ---------------------------------------
+default.initialLibrary = [];
+
+% ---------------------------------------
+% Input
+% ---------------------------------------
+p = inputParser;
+addOptional(p, 'initialLibrary', default.initialLibrary);
+
+parse(p, varargin{:});
+
+% ---------------------------------------
+% Parse
+% ---------------------------------------
+options.initialLibrary = p.Results.initialLibrary;
+
+% ---------------------------------------
+% Prepare Data
+% ---------------------------------------
 db = [];
 
 if ~isfield(data, 'checksum')
-    fprintf('[ERROR] missing checksum field \n')
+    fprintf('[ERROR] Missing Checksum Field \n')
     return
 end
 
 if ~isfield(data, 'peaks')
-    fprintf('[ERROR] missing peaks data \n')
+    fprintf('[ERROR] Missing Peaks Data \n')
     return
 end
 
 if ~isfield(data(sampleRow).peaks, 'library_match')
-    fprintf('[ERROR] missing library match \n')
+    fprintf('[ERROR] Missing Library Match \n')
     return
+end
+
+if ~isempty(options.initialLibrary)
+    lib = prepareDataLibrary(options.initialLibrary);
+    UpdateDatabaseLibrary(database, lib);
 end
 
 conn = sqlite(database);
@@ -68,9 +94,9 @@ for i=1:length(data(sampleRow).peaks)
     fieldOne = 'file_path';
     fieldTwo = 'file_name';
     fieldThree = 'compound_retention_time';
-    fieldFour = 'compound_retention_index';
     
-    if isempty(data(sampleRow).peaks(i).library_match) 
+    if ~isfield(data(sampleRow).peaks(i), 'library_match')... 
+        || isempty(data(sampleRow).peaks(i).library_match) 
         
         query = [sprintf('%s', ...
             'SELECT MAX(', id, ') ', ...
@@ -93,8 +119,7 @@ for i=1:length(data(sampleRow).peaks)
             ' FROM ', table, ...
             ' WHERE ', fieldOne, '=''', char(data(sampleRow).peaks(i).library_match.(fieldOne)),'''', ...
             ' AND ', fieldTwo, '=''', char(data(sampleRow).peaks(i).library_match.(fieldTwo)),'''', ...
-            ' AND ', fieldThree, '=''', string(ret_time),'''', ...
-            ' AND ', fieldFour, '=''', string(data(sampleRow).peaks(i).library_match.(fieldFour)), '''')];
+            ' AND ', fieldThree, '=''', string(ret_time),'''')];
 
         match = fetch(conn, query); 
 

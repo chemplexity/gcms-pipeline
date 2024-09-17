@@ -27,5 +27,7 @@ create table samples
     sampling_rate   REAL,
     time_units      TEXT,
     intensity_units TEXT,
-    channel_units   TEXT
+    channel_units   TEXT,
+    time            TEXT,
+    intensity       TEXT
 );

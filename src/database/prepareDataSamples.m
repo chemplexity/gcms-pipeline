@@ -48,6 +48,12 @@ for i=1:length(data)
     db(i).sample_info      = '';
     db(i).injvol           = 0;
     db(i).date_created     = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
+    
+    time = convertDoubleArrayToText(data(i).time(1:end), '%.4f');
+    db(i).time = time;
+
+    intensity = convertDoubleArrayToText(data(i).intensity(:, 1), '%.0f');
+    db(i).intensity = intensity;
 
 end
 

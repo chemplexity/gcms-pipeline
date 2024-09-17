@@ -1,4 +1,4 @@
-function CreateDatabase(varargin)
+function databaseFileName = CreateDatabase(varargin) 
 
 % ------------------------------------------------------------------------
 % Method      : CreateDatabase
