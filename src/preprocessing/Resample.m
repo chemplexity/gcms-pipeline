@@ -23,14 +23,14 @@ function [x0, y0] = Resample(varargin)
 % Input (Optional)
 % ------------------------------------------------------------------------
 %   'sampleRate' -- the target sample rate to resample signal (Hz)
-%       500 (default) | number
+%       8.3333 (default) | number
 
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
 default.minSize = 25;
 default.freqTol = 25;
-default.sampleRate = 500;
+default.sampleRate = 500 / 60; % 8.3333 Hz
 
 % ---------------------------------------
 % Input
@@ -63,6 +63,9 @@ if length(x) < default.minSize || length(y) < default.minSize
     default.minSize = length(x);
 end
 
+% Convert time to seconds
+x = x .* 60;
+
 % ---------------------------------------
 % Resample
 % ---------------------------------------
@@ -74,7 +77,7 @@ f0 = 1 / mean(diff(x(1:default.minSize)));
 % Downsample signal
 if f0 > sampleRate
     
-    dx = round(1./(x(3:20)-x(2)));
+    dx = round(1./(x(3:default.minSize)-x(2)));
     
     if any(dx == sampleRate)
         
@@ -102,6 +105,9 @@ elseif f0 < sampleRate
     y0 = interp1(x,y,x0);
 
 end
+
+% Convert time to minutes
+x0 = x0 ./ 60;
 
 if size(x0,1) == 1
     x0 = x0';

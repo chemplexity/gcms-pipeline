@@ -97,6 +97,10 @@ if xmax == -1 || xmax > max(x)
     xmax = max(x);
 end
 
+% Add tolerance to xmin and xmax
+xmin = xmin - 1E-9;
+xmax = xmax + 1E-9;
+
 % Check minPoints
 if minPoints < 3
     minPoints = 3;
