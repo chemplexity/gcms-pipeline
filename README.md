@@ -30,3 +30,8 @@ ___
 
 ___
 
+### Getting Started
+
+Download the latest GC/MS Pipeline code from the project homepage or visit the following link: https://github.com/chemplexity/gcms-pipeline/archive/refs/heads/main.zip
+
+
