@@ -1,10 +1,10 @@
 % -----------------------------------------------
-% GC/MS Pipeline (v0.9.0.20240910)
+% GC/MS Pipeline (v0.9.1.20240917)
 % https://github.com/chemplexity/gcms-pipeline
 % -----------------------------------------------
 
 % Paste path of GC/MS files to import
-filePath = {};
+filePath = {'./examples/data'};
 
 % Import data files
 data = ImportAgilent('file', filePath, 'depth', 3);
