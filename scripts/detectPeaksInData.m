@@ -10,6 +10,10 @@ function data = detectPeaksInData(data, varargin)
 % ---------------------------------------
 % Defaults
 % ---------------------------------------
+default.startIndex       = 1;
+default.endIndex         = length(data);
+default.minMz            = -1;
+default.maxMz            = -1;
 default.maxError         = 50;
 default.minPeakHeight    = 1E4;
 default.minPeakWidth     = 0.01;
@@ -17,16 +21,16 @@ default.minIonIntensity  = 0.02;
 default.minSignalToNoise = 2;
 default.maxPeakOverlap   = 0.5;
 default.peakSensitivity  = 200;
-default.startIndex       = 1;
-default.endIndex         = length(data);
-default.minMz            = -1;
-default.maxMz            = -1;
 
 % ---------------------------------------
 % Input
 % ---------------------------------------
 p = inputParser;
 
+addParameter(p, 'startIndex', default.startIndex);
+addParameter(p, 'endIndex', default.endIndex);
+addParameter(p, 'minMz', default.minMz);
+addParameter(p, 'maxMz', default.maxMz);
 addParameter(p, 'maxError', default.maxError);
 addParameter(p, 'minPeakHeight', default.minPeakHeight)
 addParameter(p, 'minPeakWidth', default.minPeakWidth)
@@ -34,16 +38,16 @@ addParameter(p, 'minIonIntensity', default.minIonIntensity);
 addParameter(p, 'minSignalToNoise', default.minSignalToNoise);
 addParameter(p, 'maxPeakOverlap', default.maxPeakOverlap);
 addParameter(p, 'peakSensitivity', default.peakSensitivity);
-addParameter(p, 'startIndex', default.startIndex);
-addParameter(p, 'endIndex', default.endIndex);
-addParameter(p, 'minMz', default.minMz);
-addParameter(p, 'maxMz', default.maxMz);
 
 parse(p, varargin{:});
 
 % ---------------------------------------
 % Parse
 % ---------------------------------------
+options.startIndex       = p.Results.startIndex;
+options.endIndex         = p.Results.endIndex;
+options.minMz            = p.Results.minMz;
+options.maxMz            = p.Results.maxMz;
 options.maxError         = p.Results.maxError;
 options.minPeakHeight    = p.Results.minPeakHeight;
 options.minPeakWidth     = p.Results.minPeakWidth;
@@ -51,29 +55,10 @@ options.minIonIntensity  = p.Results.minIonIntensity;
 options.minSignalToNoise = p.Results.minSignalToNoise;
 options.maxPeakOverlap   = p.Results.maxPeakOverlap;
 options.peakSensitivity  = p.Results.peakSensitivity;
-options.startIndex       = p.Results.startIndex;
-options.endIndex         = p.Results.endIndex;
-options.minMz            = p.Results.minMz;
-options.maxMz            = p.Results.maxMz;
 
 % ---------------------------------------
 % Validate
 % ---------------------------------------
-
-% Parameter: 'minIonIntensity'
-if options.minIonIntensity > 1
-    options.minIonIntensity = options.minIonIntensity / 100;
-end
-
-% Parameter: 'minPeakWidth'
-if options.minPeakWidth < 0
-    options.minPeakWidth = default.minPeakWidth;
-end
-
-% Parameter: 'peakSensitivity'
-if options.peakSensitivity < 0
-    options.peakSensitivity = default.peakSensitivity;
-end
 
 % Parameter: 'startIndex'
 if isempty(options.startIndex)
@@ -97,9 +82,30 @@ if options.endIndex < options.startIndex
     options.endIndex = options.startIndex;
 end
 
+% Parameter: 'minPeakWidth'
+if options.minPeakWidth < 0
+    options.minPeakWidth = default.minPeakWidth;
+end
+
+% Parameter: 'minIonIntensity'
+if options.minIonIntensity > 1
+    options.minIonIntensity = options.minIonIntensity / 100;
+end
+
+% Parameter: 'peakSensitivity'
+if options.peakSensitivity < 0
+    options.peakSensitivity = default.peakSensitivity;
+end
+
 % -----------------------------------------
 % Status
 % -----------------------------------------
+if isempty(data)
+    numFiles = 0;
+else
+    numFiles = options.endIndex - options.startIndex + 1;
+end
+
 fprintf(['\n', repmat('-',1,50), '\n']);
 fprintf(' PEAK DETECTION');
 fprintf(['\n', repmat('-',1,50), '\n']);
@@ -113,12 +119,23 @@ fprintf([' OPTIONS  minPeakHeight    : ', num2str(options.minPeakHeight), '\n'])
 fprintf([' OPTIONS  minPeakWidth     : ', num2str(options.minPeakWidth), '\n']);
 fprintf([' OPTIONS  minIonIntensity  : ', num2str(options.minIonIntensity), '\n']);
 fprintf([' OPTIONS  minSignalToNoise : ', num2str(options.minSignalToNoise), '\n']);
-fprintf([' OPTIONS  peakSensitivity  : ', num2str(options.peakSensitivity), '\n']);
-fprintf([' OPTIONS  maxPeakOverlap   : ', num2str(options.maxPeakOverlap), '\n\n']);
+fprintf([' OPTIONS  maxPeakOverlap   : ', num2str(options.maxPeakOverlap), '\n']);
+fprintf([' OPTIONS  peakSensitivity  : ', num2str(options.peakSensitivity), '\n\n']);
 
-fprintf([' STATUS  Detecting peaks in ', num2str(options.endIndex - options.startIndex + 1), ' files...', '\n\n']);
+fprintf([' STATUS  Detecting peaks in ', num2str(numFiles), ' files...', '\n\n']);
 totalProcessTime = 0;
 
+if isempty(data)
+    fprintf([repmat('-',1,50), '\n']);
+    fprintf(' EXIT');
+    fprintf(['\n', repmat('-',1,50), '\n']);
+    
+    return
+end
+
+% -----------------------------------------
+% Process peaks
+% -----------------------------------------
 for i = options.startIndex:options.endIndex
 
     m = num2str(i);
@@ -218,7 +235,8 @@ for i = options.startIndex:options.endIndex
         end
 
         % Add the mass spectra of each peak center
-        peakHalfWindowSize = 3;
+        peakHalfWindowSize = 2;
+
         peakCenterIndex = lookupTimeIndex(data(i).time, peak.time);
         peakStartIndex = peakCenterIndex - peakHalfWindowSize;
         peakEndIndex = peakCenterIndex + peakHalfWindowSize;

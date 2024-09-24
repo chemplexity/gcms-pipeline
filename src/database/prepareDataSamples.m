@@ -7,6 +7,8 @@ function db = prepareDataSamples(data)
 % and adding the md5 checksum to allow duplicate checking
 % ------------------------------------------------------------------------
 
+status('preparing_samples')
+
 db = [];
 data = addChecksum(data);
 
@@ -48,6 +50,39 @@ for i=1:length(data)
     db(i).sample_info      = '';
     db(i).injvol           = 0;
     db(i).date_created     = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
+    
+    time = convertDoubleArrayToText(data(i).time(1:end), '%.4f');
+    db(i).time = time;
+
+    intensity = convertDoubleArrayToText(data(i).intensity(:, 1), '%.0f');
+    db(i).intensity = intensity;
+
+end
+
+status('samples', num2str(length(data)))
+status('exit')
+
+% ---------------------------------------
+% Status
+% ---------------------------------------
+function status(varargin)
+
+switch varargin{1}
+    
+    case 'exit'
+        fprintf([repmat('-',1,50), '\n']);
+        fprintf(' EXIT');
+        fprintf(['\n', repmat('-',1,50), '\n']);
+        
+    case 'samples'
+        fprintf([' STATUS  Samples prepared: ', varargin{2},'\n']);
+
+    case 'preparing_samples'
+        fprintf(['\n', repmat('-',1,50), '\n']);
+        fprintf(' PREPARE SAMPLES DATA');
+        fprintf(['\n', repmat('-',1,50), '\n']);
+          
+end
 
 end
 

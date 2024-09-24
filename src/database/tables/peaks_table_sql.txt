@@ -22,6 +22,7 @@ create table peaks
     match_score     REAL,
     fit_x           TEXT,
     fit_y           TEXT,
+    snr             REAL,
 
 
 
