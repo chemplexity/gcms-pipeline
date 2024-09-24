@@ -1,4 +1,4 @@
-function status = UpdateDatabaseSamples(db, samplesData, varargin)
+function stat = UpdateDatabaseSamples(db, samplesData, varargin)
  
 % ------------------------------------------------------------------------
 % Method      : UpdateDatabaseSamples()
@@ -66,7 +66,7 @@ if ~skipDuplicateCheck
     end
     
     if isempty(samplesData)
-        status = 'no data';
+        stat = 'no data';
         fprintf('[ERROR] No samples to add\n');
         return
     end
@@ -92,10 +92,34 @@ data = cell2table(rows, 'VariableNames', cols);
 
 sqlwrite(conn, table, data);
 
-status = ['added samples: ', num2str(length(rows(:,1)))];
+stat = ['added samples: ', num2str(length(rows(:,1)))];
 
 fprintf('[FINISH] Database update complete!\n');
 
 close(conn);
+
+% ---------------------------------------
+% Status
+% ---------------------------------------
+function status(varargin)
+
+switch varargin{1}
+    
+    case 'exit'
+        fprintf([repmat('-',1,50), '\n']);
+        fprintf(' EXIT');
+        fprintf(['\n', repmat('-',1,50), '\n']);
+        
+    case 'samples'
+        fprintf([' STATUS  Samples prepared: ', varargin{2},'\n']);
+
+    case 'preparing_samples'
+        fprintf(['\n', repmat('-',1,50), '\n']);
+        fprintf(' PREPARE SAMPLES DATA');
+        fprintf(['\n', repmat('-',1,50), '\n']);
+          
+end
+
+end
 
 end

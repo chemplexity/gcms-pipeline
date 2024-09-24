@@ -55,20 +55,4 @@ data = detectPeaksInData(data, ...
 peaksData = reformatPeaksData(data);
 
 %% Save data to SQL database
-
-% Create database (if non'e exists)
-db = CreateDatabase();
-
-% Update samples table
-samplesData = prepareDataSamples(data);
-UpdateDatabaseSamples(db, samplesData);
-
-% Update peaks table
-for i=1:length(samplesData)
-    data = prepareDataPeaks(db, data, i, 'initialLibrary', library);
-    UpdateDatabasePeaks(db, data(i).peaks);
-end
-
-% Loads SQLLibrary into workspace
-library = loadSQLLibrary(db);
-    
+updateDatabase(data, 'initialLibrary', library);
