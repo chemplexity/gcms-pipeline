@@ -4,7 +4,7 @@
 % -----------------------------------------------
 
 % Paste path of GC/MS files to import
-filePath = {'./examples/data'};
+filePath = {};
 
 % Import data files
 data = ImportAgilent('file', filePath, 'depth', 3);

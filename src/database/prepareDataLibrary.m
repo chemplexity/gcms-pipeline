@@ -28,19 +28,19 @@ for i=1:length(data)
     end
 
     if isempty(data(i).compound_mw)
-        db(i).compound_mw = NaN;
+        db(i).compound_mw = '';
     else
         db(i).compound_mw = data(i).compound_mw;
     end
 
     if isempty(data(i).compound_exact_mass)
-        db(i).compound_exact_mass = NaN;
+        db(i).compound_exact_mass = '';
     else
         db(i).compound_exact_mass = data(i).compound_exact_mass;
     end
 
     if isempty(data(i).compound_retention_index)
-        db(i).compound_retention_index = NaN;
+        db(i).compound_retention_index = '';
     else
         db(i).compound_retention_index = data(i).compound_retention_index;
     end
