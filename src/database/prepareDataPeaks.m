@@ -1,4 +1,4 @@
-function data = prepareDataPeaks(database, data, sampleRow, varargin)
+function data = prepareDataPeaks(database, data, sampleRow)
 
 % ------------------------------------------------------------------------
 % Method      : prepareDataPeaks()
@@ -6,24 +6,6 @@ function data = prepareDataPeaks(database, data, sampleRow, varargin)
 % table in the SQL database by creating a copy with the correct field
 % names
 % ------------------------------------------------------------------------
-
-% ---------------------------------------
-% Defaults
-% ---------------------------------------
-default.initialLibrary = [];
-
-% ---------------------------------------
-% Input
-% ---------------------------------------
-p = inputParser;
-addOptional(p, 'initialLibrary', default.initialLibrary);
-
-parse(p, varargin{:});
-
-% ---------------------------------------
-% Parse
-% ---------------------------------------
-options.initialLibrary = p.Results.initialLibrary;
 
 % ---------------------------------------
 % Prepare Data
@@ -43,11 +25,6 @@ end
 if ~isfield(data(sampleRow).peaks, 'library_match')
     fprintf('[ERROR] Missing Library Match \n')
     return
-end
-
-if ~isempty(options.initialLibrary)
-    lib = prepareDataLibrary(options.initialLibrary);
-    UpdateDatabaseLibrary(database, lib);
 end
 
 conn = sqlite(database);
@@ -86,7 +63,7 @@ for i=1:length(data(sampleRow).peaks)
         peaks(i).fit(:, 2), '%.0f');
 
 % ---------------------------------------
-% Perform Spectral Matching
+% Extract Library ID
 % ---------------------------------------
     
     id = 'library_id';
@@ -94,39 +71,23 @@ for i=1:length(data(sampleRow).peaks)
     fieldOne = 'file_path';
     fieldTwo = 'file_name';
     fieldThree = 'compound_retention_time';
+    fieldFour = 'compound_formula';
     
-    if ~isfield(data(sampleRow).peaks(i), 'library_match')... 
-        || isempty(data(sampleRow).peaks(i).library_match) 
-        
-        query = [sprintf('%s', ...
-            'SELECT MAX(', id, ') ', ...
-            'FROM ', table)];
-        max = fetch(conn, query);
-        db(i).library_id = max{1,1} + 1;
-        db(i).match_score = 0;
-        
-        data(sampleRow).peaks(i).date_created = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
-        peak = ExportNIST(data(sampleRow), i);
-        peak = prepareDataLibrary(peak);
-        UpdateDatabaseLibrary(database, peak);
+    time = data(sampleRow).peaks(i).library_match.(fieldThree);
+    ret_time = sprintf('%.6f', time);
 
-    else
-
-        ret_time = sprintf('%.6f', data(sampleRow).peaks(i).library_match.(fieldThree));
-
-        query = [sprintf('%s', ...
+    query = [sprintf('%s', ...
             'SELECT ', id,  ...
             ' FROM ', table, ...
             ' WHERE ', fieldOne, '=''', char(data(sampleRow).peaks(i).library_match.(fieldOne)),'''', ...
             ' AND ', fieldTwo, '=''', char(data(sampleRow).peaks(i).library_match.(fieldTwo)),'''', ...
+            ' AND ', fieldFour, '=''', char(data(sampleRow).peaks(i).library_match.(fieldFour)),'''', ...))
             ' AND ', fieldThree, '=''', string(ret_time),'''')];
 
-        match = fetch(conn, query); 
+    match = fetch(conn, query); 
 
-        db(i).library_id = match{1,1};
-        db(i).match_score = data(sampleRow).peaks(i).match_score;
-
-    end
+    db(i).library_id = match{1,1};
+    db(i).match_score = data(sampleRow).peaks(i).match_score;
 
 end
 

@@ -25,7 +25,7 @@ if ~skipDuplicateCheck
     
     for i = 1:length(peaksData)
        
-        fprintf(['[', num2str(i), '/', num2str(length(peaksData)), '] \n']);
+        %fprintf(['[', num2str(i), '/', num2str(length(peaksData)), '] \n']);
        
         query = [sprintf('%s', ...
             'SELECT COUNT(*)', ...
@@ -95,7 +95,7 @@ sqlwrite(conn, table, data);
 
 status = ['added peaks: ', num2str(length(rows(:,1)))];
 
-fprintf('[FINISH] Database update complete!\n');
+fprintf('[FINISH] Database update complete!\n\n');
 
 close(conn);
 

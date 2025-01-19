@@ -3,7 +3,23 @@
 % https://github.com/chemplexity/gcms-pipeline
 % -----------------------------------------------
 
-% Paste path of GC/MS files to import
+%% Load initial library (if there is one) into workspace and SQL
+% (only do this once)
+libraryFile = './examples/library/GCMS DB-Public-KovatsRI-VS3.msp';
+library = ImportNIST('file', libraryFile);
+
+library = CleanupLibrary(library, ...
+'min_points', 5, ...
+'min_mz', 40, ...
+'max_mz', 700);
+
+db = CreateDatabase();
+libraryData = prepareDataLibrary(library.library);
+UpdateDatabaseLibrary(db, libraryData, true);
+
+%% Extract and match peaks from given sample 
+% Paste path of GC/M
+% S files to import
 filePath = {};
 
 % Import data files
@@ -39,20 +55,42 @@ data = detectPeaksInData(data, ...
     'peakSensitivity', 250);
 
 % Perform spectral matching on peaks (create new library from peak data)
-[data, library] = performSpectralMatch(data, ...
+[data, library] = performSpectralMatch(data, library,...
     'startIndex', [], ...
     'endIndex', [], ...
     'minMz', 40, ...
     'maxMz', 700, ...
     'minScore', 70, ...
     'minPoints', 5, ...
-    'addUnknownPeaksToLibrary', true, ...
+    'addUnknownPeaksToLibrary', false, ...
     'overrideExistingMatches', true, ...
-    'requireRetentionTimeMatch', true, ...
+    'requireRetentionTimeMatch', false, ...
     'retentionTimeTolerance', 0.1);
+
+plotChromatogramWithLibraryMatches(data, 1);
 
 % Convert peaks data to user-friendly data structure
 peaksData = reformatPeaksData(data);
 
 %% Save data to SQL database
-updateDatabase(data, 'initialLibrary', library);
+if exist('db', 'var')
+    updateDatabase(data, 'filename', db);
+else
+    updateDatabase(data);
+end
+
+%% Update 'library' in workspace to include newly added peaks
+library = loadSQLLibrary(db);
+
+%% Plot mass spectra of matches (manual increment)
+if ~exist('idx', 'var')
+    idx = 0;
+end
+
+idx = idx + 1;
+if idx > length(data)
+    idx = 1;
+end
+
+plotType = {'compound_name', 'compound_ontology'};
+plotChromatogramWithLibraryMatches(data, idx, plotType{1});

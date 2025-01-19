@@ -41,7 +41,12 @@ nistData(1).compound_retention_time = sampleData.peaks(peakRow).time;
 nistData(1).num_peaks = length(sampleData.peaks(peakRow).mz);
 nistData(1).mz = sampleData.peaks(peakRow).mz;
 nistData(1).intensity = sampleData.peaks(peakRow).intensity;
-nistData(1).date_created = sampleData.peaks(peakRow).date_created;
+
+if isfield(sampleData.peaks(peakRow), 'date_created')
+    nistData(1).date_created = sampleData.peaks(peakRow).date_created;
+else
+    nistData(1).date_created = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
+end
 
 nistData(1).compound_name = '';
 nistData(1).compound_synonym = '';
