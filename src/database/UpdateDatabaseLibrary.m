@@ -24,11 +24,11 @@ index = [];
 
 if ~skipDuplicateCheck
 
-    fprintf('Checking for Duplicates\n');
+    % fprintf('Checking for Duplicates\n');
 
     for i = 1:length(libraryData)
 
-        fprintf(['[', num2str(i), '/', num2str(length(libraryData)), '] \n']);
+        %fprintf(['[', num2str(i), '/', num2str(length(libraryData)), '] \n']);
 
         query = [sprintf('%s', ...
             'SELECT COUNT(*)', ...
@@ -37,7 +37,7 @@ if ~skipDuplicateCheck
             ' AND ', fieldTwo, '=''', char(libraryData(i).(fieldTwo)),'''', ...
             ' AND ', fieldThree, '=''', string(libraryData(i).(fieldThree)),'''', ...
             ' AND ', fieldFour, '=''', string(libraryData(i).(fieldFour)), '''')];
-     
+
         if isempty(libraryData(i).(fieldOne)) ...
                 | isempty(libraryData(i).(fieldTwo)) ...
                 | isempty(libraryData(i).(fieldThree))...
@@ -72,7 +72,7 @@ if ~skipDuplicateCheck
         libraryData(index) = [];
         fprintf(['[IGNORE] ' num2str(length(index)), '\n']);
     else
-        fprintf('[OK] \n');
+        %fprintf('[OK] \n');
     end
 
     if isempty(libraryData)
@@ -95,16 +95,16 @@ for i = 1:length(libraryData)
 
 end
 
-fprintf(['[INSERT] ' num2str(length(rows(:,1))), ' compounds\n']);
-fprintf('[INSERT] please wait....\n');
+%fprintf(['[INSERT] ' num2str(length(rows(:,1))), ' compounds\n']);
+%fprintf('[INSERT] please wait....\n');
 
 data = cell2table(rows, 'VariableNames', cols);
 
 sqlwrite(conn, table, data);
 
-status = ['added compounds: ', num2str(length(rows(:,1)))];
+%status = ['added compounds: ', num2str(length(rows(:,1)))];
 
-fprintf('[FINISH] Database update complete!\n');
+%fprintf('[FINISH] Database update complete!\n');
 
 close(conn);
 

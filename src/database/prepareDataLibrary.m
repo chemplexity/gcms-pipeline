@@ -33,14 +33,16 @@ for i=1:length(data)
         db(i).compound_mw = data(i).compound_mw;
     end
 
+    %db(i).compound_exact_mass = '';
+
     if isempty(data(i).compound_exact_mass)
-        db(i).compound_exact_mass = '';
     else
         db(i).compound_exact_mass = data(i).compound_exact_mass;
     end
 
+    %db(i).compound_retention_index = '';
+
     if isempty(data(i).compound_retention_index)
-        db(i).compound_retention_index = '';
     else
         db(i).compound_retention_index = data(i).compound_retention_index;
     end
