@@ -45,22 +45,17 @@ for i=1:length(data(sampleRow).peaks)
     db(i).input_x = data(sampleRow).peaks(i).peakCenterX;
     db(i).input_y = data(sampleRow).peaks(i).peakCenterY;
     db(i).date_created = datestr(now(), 'yyyy-mm-ddTHH:MM:SS');
-    db(i).sample_id = getSampleIDFromChecksum(database, ...
-        data(sampleRow).checksum);
+    db(i).sample_id = getSampleIDFromChecksum(database, data(sampleRow).checksum);
     
-    indexOfPeakTime = lookupTimeIndex(data(sampleRow).time, ...
-        data(sampleRow).peaks(i).time);
+    indexOfPeakTime = lookupTimeIndex(data(sampleRow).time, data(sampleRow).peaks(i).time);
 
     mz = convertDoubleArrayToText(data(sampleRow).channel(1, 2:end), '%.4f');
-    intensity = convertDoubleArrayToText(data(sampleRow).intensity ...
-        (indexOfPeakTime, 2:end),'%.0f' );
+    intensity = convertDoubleArrayToText(data(sampleRow).intensity(indexOfPeakTime, 2:end),'%.0f' );
 
     db(i).peak_mz = mz;
     db(i).peak_intensity = intensity;
-    db(i).fit_x = convertDoubleArrayToText(data(sampleRow). ...
-        peaks(i).fit(:, 1), '%.6f');
-    db(i).fit_y = convertDoubleArrayToText(data(sampleRow). ...
-        peaks(i).fit(:, 2), '%.0f');
+    db(i).fit_x = convertDoubleArrayToText(data(sampleRow).peaks(i).fit(:, 1), '%.6f');
+    db(i).fit_y = convertDoubleArrayToText(data(sampleRow).peaks(i).fit(:, 2), '%.0f');
 
 % ---------------------------------------
 % Extract Library ID
@@ -86,10 +81,17 @@ for i=1:length(data(sampleRow).peaks)
 
     match = fetch(conn, query); 
 
-    db(i).library_id = match{1,1};
-    db(i).match_score = data(sampleRow).peaks(i).match_score;
+    numResults = size(match);
+
+    if numResults(1) >= 1
+        db(i).library_id = match{1,1};
+        db(i).match_score = data(sampleRow).peaks(i).match_score;
+    else
+        db(i).library_id = 0;
+        db(i).match_score = data(sampleRow).peaks(i).match_score;
+    end
 
 end
 
-data(sampleRow).peaks = db;
+% data(sampleRow).peaks = db;
 close(conn);
